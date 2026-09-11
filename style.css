@@ -248,3 +248,81 @@ ul,li{list-style:none;}
 /* ========== 版本号输入 ========== */
 .version-input{width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;outline:none;}
 .version-input:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.1);}
+
+/* ========== 变更管理 ========== */
+.change-status-draft{background:#f1f5f9;color:#64748b;}
+.change-status-flow{background:#dbeafe;color:#3b82f6;}
+.change-status-done{background:#dcfce7;color:#16a34a;}
+.change-status-cancel{background:#fee2e2;color:#ef4444;}
+.change-type-badge{background:#ede9fe;color:#7c3aed;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;}
+
+/* 变更创建弹窗 */
+.change-modal-dialog{max-width:900px;width:90%;max-height:85vh;overflow-y:auto;}
+.change-section{margin-bottom:20px;}
+.change-section-title{font-size:14px;font-weight:bold;color:#1e293b;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;}
+.change-objects-table{width:100%;border-collapse:collapse;font-size:12px;}
+.change-objects-table thead th{background:#f8fafc;padding:8px;text-align:left;font-weight:600;color:#475569;border-bottom:2px solid #e2e8f0;white-space:nowrap;}
+.change-objects-table tbody td{padding:8px;border-bottom:1px solid #f1f5f9;vertical-align:top;}
+.change-objects-table tbody tr:hover{background:#f8fafc;}
+.change-before-after{max-width:200px;max-height:80px;overflow-y:auto;word-break:break-all;background:#f8fafc;padding:4px 6px;border-radius:4px;font-size:11px;}
+.change-action-btn{padding:3px 8px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;cursor:pointer;font-size:11px;color:#475569;margin-right:4px;}
+.change-action-btn:hover{background:#f8fafc;border-color:#cbd5e1;}
+.change-action-btn.danger{color:#ef4444;border-color:#fecaca;}
+.change-action-btn.danger:hover{background:#fef2f2;}
+.change-action-btn.primary{color:#3b82f6;border-color:#bfdbfe;}
+.change-action-btn.primary:hover{background:#eff6fe;}
+.change-object-row{cursor:pointer;}
+.change-object-row.collapsed .change-detail-rows{display:none;}
+.change-object-row .expand-indicator{font-size:10px;color:#94a3b8;user-select:none;display:inline-block;width:14px;text-align:center;}
+.change-field-select{padding:4px 6px;border:1px solid #e2e8f0;border-radius:4px;font-size:11px;background:#fff;outline:none;min-width:120px;}
+.change-before-input,.change-after-input{padding:4px 6px;border:1px solid #e2e8f0;border-radius:4px;font-size:11px;background:#fff;outline:none;width:100%;min-height:28px;}
+
+/* 变更信息表单 */
+.change-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;}
+.change-info-grid.three-col{grid-template-columns:1fr 1fr 1fr;}
+.change-info-field{display:flex;flex-direction:column;}
+.change-info-label{font-size:12px;color:#94a3b8;margin-bottom:2px;}
+.change-info-label .required{color:#ef4444;}
+.change-info-value{font-size:13px;color:#1e293b;}
+.change-info-value input,.change-info-value select,.change-info-value textarea{width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:13px;color:#1e293b;background:#fff;outline:none;}
+.change-info-value input:focus,.change-info-value select:focus,.change-info-value textarea:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.1);}
+.change-info-value textarea{min-height:50px;resize:vertical;line-height:1.5;}
+.change-info-value.auto{background:#f8fafc;padding:6px 8px;border-radius:4px;color:#64748b;}
+
+/* 审批流程 */
+.workflow-timeline{padding:12px 0;}
+.workflow-step{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #f1f5f9;}
+.workflow-step:last-child{border-bottom:none;}
+.workflow-step-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;flex-shrink:0;}
+.workflow-step-icon.pending{background:#f1f5f9;color:#94a3b8;border:2px solid #e2e8f0;}
+.workflow-step-icon.approved{background:#dcfce7;color:#16a34a;border:2px solid #86efac;}
+.workflow-step-icon.rejected{background:#fee2e2;color:#ef4444;border:2px solid #fecaca;}
+.workflow-step-icon.current{background:#dbeafe;color:#3b82f6;border:2px solid #93c5fd;}
+.workflow-step-content{flex:1;}
+.workflow-step-role{font-size:13px;font-weight:600;color:#1e293b;}
+.workflow-step-approver{font-size:12px;color:#64748b;}
+.workflow-step-status{font-size:11px;margin-top:2px;}
+.workflow-step-comment{font-size:12px;color:#475569;margin-top:4px;padding:6px 8px;background:#f8fafc;border-radius:4px;}
+
+/* 审批操作 */
+.approval-actions{display:flex;gap:8px;margin-top:12px;}
+.approval-textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;min-height:60px;resize:vertical;outline:none;line-height:1.5;}
+.approval-textarea:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.1);}
+
+/* 需求选择弹窗 */
+.req-select-dialog{max-width:700px;width:90%;max-height:70vh;overflow-y:auto;}
+.req-select-table{width:100%;border-collapse:collapse;font-size:12px;}
+.req-select-table thead th{background:#f8fafc;padding:8px;text-align:left;font-weight:600;border-bottom:2px solid #e2e8f0;}
+.req-select-table tbody td{padding:8px;border-bottom:1px solid #f1f5f9;}
+.req-select-table tbody tr{cursor:pointer;}
+.req-select-table tbody tr:hover{background:#eff6fe;}
+
+/* 变更详情 */
+.change-detail-section{margin-bottom:16px;}
+.change-detail-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px 16px;}
+.change-detail-item{display:flex;flex-direction:column;}
+.change-detail-item-label{font-size:11px;color:#94a3b8;}
+.change-detail-item-value{font-size:13px;color:#1e293b;word-break:break-all;}
+
+/* 转办弹窗 */
+.transfer-dialog{max-width:400px;}

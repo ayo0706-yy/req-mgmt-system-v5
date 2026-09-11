@@ -1,5 +1,5 @@
 /* ========== 全局数据 ========== */
-var allData = { ir: [], sr: [], ar: [], baselines: [] };
+var allData = { ir: [], sr: [], ar: [], baselines: [], changes: [] };
 var expandedRows = {};
 var selectedItems = { ir: new Set(), sr: new Set() };
 var currentDrawer = null; // 'ir' or 'sr'
@@ -83,6 +83,8 @@ function initPage() {
     document.getElementById('stat-sr').textContent = allData.sr.length;
     document.getElementById('stat-ar').textContent = allData.ar.length;
     renderBaselineList();
+    generateChangeSampleData();
+    renderChangeList();
 }
 
 /* ========== 生成示例数据 ========== */
@@ -546,6 +548,8 @@ function selectNav(el, pageId) {
         renderARList();
     } else if (pageId === 'page-baseline-mgmt') {
         renderBaselineList();
+    } else if (pageId === 'page-change-mgmt') {
+        renderChangeList();
     }
 }
 
@@ -1935,6 +1939,728 @@ function viewBaseline(id) {
     html += '</div></div>';
     body.innerHTML = html;
     document.getElementById('baselineDetailModal').classList.add('show');
+}
+
+/* ========== 变更管理：全局变量 ========== */
+var currentChangeObjects = []; // 变更对象数组
+var currentChangeReqSelectType = null; // 需求选择类型
+var currentApprovalChangeId = null; // 当前审批的变更ID
+var currentTransferStepIndex = null; // 转办的步骤索引
+
+var changeFieldOptions = {
+    '基本信息': ['状态', '需求来源', '需求分类', '价值主张', '需求等级', '需求差异类型', '适用品牌', '适用产品线', '适用市场', '适用版本', '适配品类', '事业部锁定', '标题', '描述', '责任人', '系统工程师'],
+    '计划排期': ['计划需求评审完成时间', '实际需求评审完成时间', '计划技术评审完成时间', '实际技术评审完成时间', '计划开发开始时间', '实际开发开始时间', '计划开发完成时间', '实际开发完成时间']
+};
+
+var approverConfig = {
+    '手机': { SPP: '王海', SE: '刘祥根', SPM: '张海军' },
+    '平板': { SPP: '沈茂伟', SE: '王力博', SPM: '肖龙启' }
+};
+
+/* ========== 变更管理：示例数据 ========== */
+function generateChangeSampleData() {
+    allData.changes = [
+        {
+            id: 'CR-2026-001', code: 'CR-2026-001', title: 'AI夜景算法需求等级变更',
+            status: '变更结束',
+            objects: [
+                { reqType: 'IR', reqId: 'IR-001', reqCode: 'IR-2026-001', reqTitle: 'AI夜景算法优化',
+                  changeCategory: '修改',
+                  changes: [{ field: '需求等级', before: 'S', after: 'A' }] }
+            ],
+            reqLevel: '初始需求IR', changeType: '需求变更', changeCategory: '修改',
+            affectFeature: '否', isValuePoint: '否',
+            changeOwner: '张明', sourceDept: ['产品部'],
+            irFactors: '市场需求调整', srFactors: '',
+            changeReason: '根据市场反馈，S级优先级过高，调整为A级', reviewConclusion: '评审通过，同意变更',
+            reviewLink: 'https://example.com/review/001', remark: '',
+            applicant: '张明', applyDate: '2026-08-20', endDate: '2026-08-25',
+            workflow: {
+                currentStep: 1, steps: [
+                    { role: 'SPP', approver: '王海', status: '通过', comment: '同意变更，风险可控' }
+                ]
+            }
+        },
+        {
+            id: 'CR-2026-002', code: 'CR-2026-002', title: '快充协议计划排期变更',
+            status: '流程中',
+            objects: [
+                { reqType: 'IR', reqId: 'IR-002', reqCode: 'IR-2026-002', reqTitle: '超级闪充快充协议升级',
+                  changeCategory: '修改',
+                  changes: [{ field: '计划开发完成时间', before: '2026-09-15', after: '2026-09-30' }] },
+                { reqType: 'SR', reqId: 'SR-001', reqCode: 'SR-2026-002-01', reqTitle: '快充协议适配',
+                  changeCategory: '修改',
+                  changes: [{ field: '计划开发完成时间', before: '2026-09-10', after: '2026-09-25' }] }
+            ],
+            reqLevel: '初始需求IR,系统需求SR', changeType: '计划变更', changeCategory: '修改',
+            affectFeature: '否', isValuePoint: '否',
+            changeOwner: '李华', sourceDept: ['研发部', '产品部'],
+            irFactors: '', srFactors: '排期调整',
+            changeReason: '供应商芯片交付延迟，开发排期需后移两周', reviewConclusion: '',
+            reviewLink: '', remark: '已通知相关干系人',
+            applicant: '李华', applyDate: '2026-09-01', endDate: null,
+            workflow: {
+                currentStep: 0, steps: [
+                    { role: 'SPM', approver: '张海军', status: '待审批', comment: '' }
+                ]
+            }
+        },
+        {
+            id: 'CR-2026-003', code: 'CR-2026-003', title: '新增多摄协同拍摄SR需求',
+            status: '流程中',
+            objects: [
+                { reqType: 'SR', reqId: 'SR-005', reqCode: 'SR-2026-007-01', reqTitle: '多摄融合算法（新增）',
+                  changeCategory: '新增',
+                  changes: [{ field: '标题', before: '无', after: '多摄融合算法' }] }
+            ],
+            reqLevel: '系统需求SR', changeType: '需求变更', changeCategory: '新增',
+            affectFeature: '是', isValuePoint: '是',
+            changeOwner: '王芳', sourceDept: ['影像部'],
+            irFactors: '', srFactors: '新增SR需求',
+            changeReason: '需要新增多摄协同拍摄的SR需求以支持IR-2026-007', reviewConclusion: '',
+            reviewLink: '', remark: '',
+            applicant: '王芳', applyDate: '2026-09-05', endDate: null,
+            workflow: {
+                currentStep: 0, steps: [
+                    { role: 'SE', approver: '刘祥根', status: '待审批', comment: '' }
+                ]
+            }
+        }
+    ];
+}
+
+/* ========== 变更管理：状态Badge ========== */
+function getChangeStatusBadge(status) {
+    var map = { '草稿': 'change-status-draft', '流程中': 'change-status-flow', '变更结束': 'change-status-done', '取消申请': 'change-status-cancel' };
+    var cls = map[status] || 'change-status-draft';
+    return '<span class="badge ' + cls + '">' + escapeHtml(status) + '</span>';
+}
+
+/* ========== 变更管理：时长计算 ========== */
+function getChangeDuration(change) {
+    var apply = new Date(change.applyDate);
+    var end = change.endDate ? new Date(change.endDate) : new Date();
+    var diff = end - apply;
+    if (diff < 0) diff = 0;
+    var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    return days + '天' + hours + '小时';
+}
+
+/* ========== 变更管理：列表渲染 ========== */
+function renderChangeList() {
+    var table = document.getElementById('changeTable');
+    if (!table) return;
+    var html = '';
+    html += '<thead><tr>';
+    html += '<th>变更标题</th><th>需求层级</th><th>变更类型</th><th>变更分类</th>';
+    html += '<th>变更需求编码</th><th>变更责任人</th><th>变更状态</th>';
+    html += '<th>申请人</th><th>申请日期</th><th>时长</th><th>操作</th>';
+    html += '</tr></thead><tbody>';
+    allData.changes.forEach(function(c) {
+        var codes = c.objects.map(function(o) { return o.reqCode; }).join(', ');
+        html += '<tr>';
+        html += '<td><span class="link-title" onclick="openChangeDetail(\'' + c.id + '\')">' + escapeHtml(c.title) + '</span></td>';
+        html += '<td>' + escapeHtml(c.reqLevel) + '</td>';
+        html += '<td><span class="change-type-badge">' + escapeHtml(c.changeType) + '</span></td>';
+        html += '<td>' + escapeHtml(c.changeCategory) + '</td>';
+        html += '<td>' + escapeHtml(codes) + '</td>';
+        html += '<td>' + escapeHtml(c.changeOwner) + '</td>';
+        html += '<td>' + getChangeStatusBadge(c.status) + '</td>';
+        html += '<td>' + escapeHtml(c.applicant) + '</td>';
+        html += '<td>' + escapeHtml(c.applyDate) + '</td>';
+        html += '<td>' + getChangeDuration(c) + '</td>';
+        html += '<td class="col-action">';
+        if (c.status === '流程中') {
+            html += '<button class="toolbar-btn" style="padding:4px 8px;font-size:12px;" onclick="openChangeApproval(\'' + c.id + '\')">审批</button>';
+        } else {
+            html += '<button class="toolbar-btn" style="padding:4px 8px;font-size:12px;" onclick="openChangeDetail(\'' + c.id + '\')">查看</button>';
+        }
+        html += '</td>';
+        html += '</tr>';
+    });
+    html += '</tbody>';
+    table.innerHTML = html;
+}
+
+/* ========== 变更管理：发起变更 ========== */
+function openChangeCreate() {
+    currentChangeObjects = [];
+    renderChangeCreateForm();
+    document.getElementById('changeCreateModal').classList.add('show');
+}
+
+function renderChangeCreateForm() {
+    var body = document.getElementById('changeCreateBody');
+    var html = '';
+
+    // 1. 变更标题
+    html += '<div class="change-section">';
+    html += '<div class="change-section-title">变更基本信息</div>';
+    html += '<div class="change-info-grid">';
+    html += '<div class="change-info-field"><div class="change-info-label">变更标题 <span class="required">*</span></div>';
+    html += '<div class="change-info-value"><input type="text" id="changeTitle" placeholder="请输入变更标题" style="width:100%;"></div></div>';
+    html += '<div class="change-info-field"><div class="change-info-label">流程编码</div>';
+    html += '<div class="change-info-value auto">系统自动生成</div></div>';
+    html += '</div></div>';
+
+    // 2. 变更对象板块
+    html += '<div class="change-section">';
+    html += '<div class="change-section-title">变更对象';
+    html += '<div>';
+    html += '<button class="change-action-btn primary" onclick="openReqSelect(\'IR\')">选取IR</button>';
+    html += '<button class="change-action-btn primary" onclick="openReqSelect(\'SR\')">选取SR</button>';
+    html += '<button class="change-action-btn" onclick="addNewChangeObject(\'IR\')">新增IR</button>';
+    html += '</div></div>';
+    html += '<div style="font-size:12px;color:#f59e0b;margin-bottom:8px;">提示：若需新增SR需先选取IR，再新增SR</div>';
+
+    if (currentChangeObjects.length === 0) {
+        html += '<div class="empty-state">暂无变更对象，请点击上方按钮选取或新增</div>';
+    } else {
+        html += '<table class="change-objects-table">';
+        html += '<thead><tr><th>变更分类</th><th>需求标题</th><th>需求编码</th><th>操作</th><th>变更字段</th><th>变更前</th><th>变更后</th></tr></thead>';
+        html += '<tbody>';
+        currentChangeObjects.forEach(function(obj, i) {
+            var hasChanges = obj.changes.length > 0;
+            // 对象摘要行
+            html += '<tr class="change-object-row' + (hasChanges ? '' : ' collapsed') + '" id="changeObjRow' + i + '">';
+            html += '<td><select class="change-field-select" onchange="updateChangeObj(' + i + ',\'changeCategory\',this.value)">';
+            ['新增', '删除', '修改'].forEach(function(cat) {
+                html += '<option value="' + cat + '"' + (obj.changeCategory === cat ? ' selected' : '') + '>' + cat + '</option>';
+            });
+            html += '</select></td>';
+            html += '<td>' + escapeHtml(obj.reqTitle || '(待填写)') + '</td>';
+            html += '<td>' + escapeHtml(obj.reqCode || '(待生成)') + '</td>';
+            html += '<td>';
+            if (obj.reqType === 'IR') {
+                html += '<button class="change-action-btn primary" onclick="event.stopPropagation();addNewChangeObject(\'SR\',' + i + ')">新增SR</button>';
+            }
+            html += '<button class="change-action-btn" onclick="event.stopPropagation();editChangeObject(' + i + ')">编辑</button>';
+            html += '<button class="change-action-btn danger" onclick="event.stopPropagation();removeChangeObject(' + i + ')">移除</button>';
+            html += '</td>';
+            html += '<td colspan="3">';
+            if (hasChanges) {
+                html += '<span class="expand-indicator" onclick="toggleChangeObjRow(' + i + ')">&#9660;</span>';
+                html += '<span style="font-size:11px;color:#64748b;">' + obj.changes.length + '项变更</span>';
+            } else {
+                html += '<button class="change-action-btn primary" onclick="event.stopPropagation();addChangeFieldRow(' + i + ')">添加变更字段</button>';
+            }
+            html += '</td>';
+            html += '</tr>';
+
+            // 变更字段明细行
+            if (hasChanges) {
+                html += '<tr class="change-detail-rows" id="changeDetailRows' + i + '"><td colspan="7" style="padding:8px 16px;background:#f8fafc;">';
+                html += '<table style="width:100%;font-size:11px;border-collapse:collapse;">';
+                html += '<thead><tr><th style="text-align:left;padding:4px;">变更字段</th><th style="text-align:left;padding:4px;">变更前</th><th style="text-align:left;padding:4px;">变更后</th><th style="width:60px;">操作</th></tr></thead><tbody>';
+                obj.changes.forEach(function(ch, j) {
+                    html += '<tr>';
+                    html += '<td style="padding:4px;">' + escapeHtml(ch.field) + '</td>';
+                    html += '<td style="padding:4px;"><div class="change-before-after">' + escapeHtml(ch.before) + '</div></td>';
+                    html += '<td style="padding:4px;"><div class="change-before-after">' + escapeHtml(ch.after) + '</div></td>';
+                    html += '<td style="padding:4px;"><button class="change-action-btn danger" onclick="removeChangeFieldRow(' + i + ',' + j + ')">移除</button></td>';
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+                html += '<div style="margin-top:6px;"><button class="change-action-btn primary" onclick="addChangeFieldRow(' + i + ')">添加变更字段</button></div>';
+                html += '</td></tr>';
+            }
+        });
+        html += '</tbody></table>';
+    }
+    html += '</div>';
+
+    // 3. 变更信息板块
+    html += '<div class="change-section">';
+    html += '<div class="change-section-title">变更信息</div>';
+    html += '<div class="change-info-grid">';
+    // 需求层级（自动）
+    html += '<div class="change-info-field"><div class="change-info-label">需求层级</div><div class="change-info-value auto" id="aggReqLevel">' + autoAggReqLevel() + '</div></div>';
+    // 变更类型（自动）
+    html += '<div class="change-info-field"><div class="change-info-label">变更类型</div><div class="change-info-value auto" id="aggChangeType">' + autoAggChangeType() + '</div></div>';
+    // 变更分类（自动）
+    html += '<div class="change-info-field"><div class="change-info-label">变更分类</div><div class="change-info-value auto" id="aggChangeCategory">' + autoAggChangeCategory() + '</div></div>';
+    // 是否影响特性
+    html += '<div class="change-info-field"><div class="change-info-label">是否影响特性 <span class="required">*</span></div>';
+    html += '<div class="change-info-value"><select id="changeAffectFeature"><option value="">请选择</option><option value="是">是</option><option value="否">否</option></select></div></div>';
+    // 是否价值点
+    html += '<div class="change-info-field"><div class="change-info-label">是否价值点 <span class="required">*</span></div>';
+    html += '<div class="change-info-value"><select id="changeIsValuePoint"><option value="">请选择</option><option value="是">是</option><option value="否">否</option></select></div></div>';
+    // 变更责任人
+    html += '<div class="change-info-field"><div class="change-info-label">变更责任人 <span class="required">*</span></div>';
+    html += '<div class="change-info-value"><input type="text" id="changeOwner" placeholder="请输入"></div></div>';
+    // 变更来源部门
+    html += '<div class="change-info-field"><div class="change-info-label">变更来源部门 <span class="required">*</span></div>';
+    html += '<div class="change-info-value"><input type="text" id="changeSourceDept" placeholder="多个部门用逗号隔开"></div></div>';
+    // IR变更因素
+    html += '<div class="change-info-field"><div class="change-info-label">IR变更因素</div>';
+    html += '<div class="change-info-value"><select id="changeIrFactors"><option value="">请选择</option>';
+    ['市场需求', '技术升级', '合规要求', '竞品对标', '用户体验'].forEach(function(v) {
+        html += '<option value="' + v + '">' + v + '</option>';
+    });
+    html += '</select></div></div>';
+    // SR变更因素
+    html += '<div class="change-info-field"><div class="change-info-label">SR变更因素</div>';
+    html += '<div class="change-info-value"><select id="changeSrFactors"><option value="">请选择</option>';
+    ['依赖变更', '接口变更', '性能优化', '架构调整'].forEach(function(v) {
+        html += '<option value="' + v + '">' + v + '</option>';
+    });
+    html += '</select></div></div>';
+    // 变更原因
+    html += '<div class="change-info-field" style="grid-column:1/-1;"><div class="change-info-label">变更原因 <span class="required">*</span></div>';
+    html += '<div class="change-info-value"><textarea id="changeReason" placeholder="请输入变更原因" style="min-height:50px;"></textarea></div></div>';
+    // 领域评审结论
+    html += '<div class="change-info-field" style="grid-column:1/-1;"><div class="change-info-label">领域评审结论 <span class="required">*</span></div>';
+    html += '<div class="change-info-value"><textarea id="changeReviewConclusion" placeholder="请输入评审结论" style="min-height:50px;"></textarea></div></div>';
+    // 评审结论链接
+    html += '<div class="change-info-field" style="grid-column:1/-1;"><div class="change-info-label">评审结论链接 <span class="required">*</span></div>';
+    html += '<div class="change-info-value"><input type="text" id="changeReviewLink" placeholder="请上传需求变更申请表链接，可输入多个链接"></div></div>';
+    // 备注
+    html += '<div class="change-info-field" style="grid-column:1/-1;"><div class="change-info-label">备注</div>';
+    html += '<div class="change-info-value"><textarea id="changeRemark" placeholder="请输入备注" style="min-height:40px;"></textarea></div></div>';
+    html += '</div></div>';
+
+    body.innerHTML = html;
+}
+
+/* ========== 变更管理：自动聚合 ========== */
+function autoAggReqLevel() {
+    var hasIR = false, hasSR = false;
+    currentChangeObjects.forEach(function(o) {
+        if (o.reqType === 'IR') hasIR = true;
+        if (o.reqType === 'SR') hasSR = true;
+    });
+    var result = [];
+    if (hasIR) result.push('初始需求IR');
+    if (hasSR) result.push('系统需求SR');
+    return result.join(',') || '-';
+}
+
+function autoAggChangeType() {
+    var hasBasic = false, hasSchedule = false;
+    currentChangeObjects.forEach(function(o) {
+        o.changes.forEach(function(ch) {
+            if (changeFieldOptions['基本信息'].indexOf(ch.field) >= 0) hasBasic = true;
+            if (changeFieldOptions['计划排期'].indexOf(ch.field) >= 0) hasSchedule = true;
+        });
+    });
+    var result = [];
+    if (hasBasic) result.push('需求变更');
+    if (hasSchedule) result.push('计划变更');
+    return result.join(',') || '-';
+}
+
+function autoAggChangeCategory() {
+    var cats = [];
+    currentChangeObjects.forEach(function(o) {
+        if (o.changeCategory && cats.indexOf(o.changeCategory) < 0) cats.push(o.changeCategory);
+    });
+    return cats.join('/') || '-';
+}
+
+function refreshAggFields() {
+    var el1 = document.getElementById('aggReqLevel');
+    var el2 = document.getElementById('aggChangeType');
+    var el3 = document.getElementById('aggChangeCategory');
+    if (el1) el1.textContent = autoAggReqLevel();
+    if (el2) el2.textContent = autoAggChangeType();
+    if (el3) el3.textContent = autoAggChangeCategory();
+}
+
+/* ========== 变更管理：需求选择 ========== */
+function openReqSelect(type) {
+    currentChangeReqSelectType = type;
+    document.getElementById('reqSelectTitle').textContent = '选择' + type + '需求';
+    var body = document.getElementById('reqSelectBody');
+    var data = type === 'IR' ? allData.ir : allData.sr;
+    var html = '';
+    if (data.length === 0) {
+        html = '<div class="empty-state">暂无可选' + type + '需求</div>';
+    } else {
+        html += '<table class="req-select-table"><thead><tr><th>选择</th><th>需求编码</th><th>标题</th><th>状态</th><th>责任人</th></tr></thead><tbody>';
+        data.forEach(function(d) {
+            var alreadySel = currentChangeObjects.some(function(o) { return o.reqId === d.id; });
+            if (alreadySel) return;
+            html += '<tr onclick="confirmReqSelect(\'' + type + "','" + d.id + "')\">";
+            html += '<td style="text-align:center;"><input type="radio" name="reqSelect"></td>';
+            html += '<td>' + escapeHtml(d.code) + '</td>';
+            html += '<td>' + escapeHtml(d.title) + '</td>';
+            html += '<td>' + escapeHtml(d.status) + '</td>';
+            html += '<td>' + escapeHtml(d.owner) + '</td>';
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+    }
+    body.innerHTML = html;
+    document.getElementById('reqSelectModal').classList.add('show');
+}
+
+function confirmReqSelect(type, reqId) {
+    var data = type === 'IR' ? allData.ir : allData.sr;
+    var req = data.find(function(d) { return d.id === reqId; });
+    if (!req) return;
+    currentChangeObjects.push({
+        reqType: type, reqId: req.id, reqCode: req.code, reqTitle: req.title,
+        changeCategory: '修改', changes: []
+    });
+    closeModal('reqSelectModal');
+    renderChangeCreateForm();
+}
+
+/* ========== 变更管理：新增变更对象 ========== */
+function addNewChangeObject(type, parentIndex) {
+    var obj = {
+        reqType: type,
+        reqId: type + '-NEW-' + Date.now(),
+        reqCode: type + '-2026-NEW-' + (currentChangeObjects.length + 1),
+        reqTitle: '(' + (type === 'IR' ? '新增IR' : '新增SR') + ')',
+        changeCategory: '新增',
+        changes: [{ field: '标题', before: '无', after: '' }]
+    };
+    if (type === 'SR' && parentIndex !== undefined) {
+        // 新增SR关联到IR
+        currentChangeObjects.splice(parentIndex + 1, 0, obj);
+    } else {
+        currentChangeObjects.push(obj);
+    }
+    renderChangeCreateForm();
+}
+
+/* ========== 变更管理：对象操作 ========== */
+function removeChangeObject(index) {
+    currentChangeObjects.splice(index, 1);
+    renderChangeCreateForm();
+}
+
+function editChangeObject(index) {
+    var obj = currentChangeObjects[index];
+    var newTitle = prompt('请输入需求标题', obj.reqTitle);
+    if (newTitle !== null) { obj.reqTitle = newTitle; renderChangeCreateForm(); }
+}
+
+function updateChangeObj(index, prop, value) {
+    if (currentChangeObjects[index]) {
+        currentChangeObjects[index][prop] = value;
+        refreshAggFields();
+    }
+}
+
+function toggleChangeObjRow(index) {
+    var row = document.getElementById('changeObjRow' + index);
+    var detail = document.getElementById('changeDetailRows' + index);
+    if (row) row.classList.toggle('collapsed');
+}
+
+function addChangeFieldRow(objIndex) {
+    var field = prompt('请输入变更字段名称（如：状态、需求等级、计划开发完成时间等）', '状态');
+    if (!field) return;
+    var before = prompt('变更前值', '');
+    var after = prompt('变更后值', '');
+    currentChangeObjects[objIndex].changes.push({ field: field, before: before || '', after: after || '' });
+    renderChangeCreateForm();
+    refreshAggFields();
+}
+
+function removeChangeFieldRow(objIndex, fieldIndex) {
+    currentChangeObjects[objIndex].changes.splice(fieldIndex, 1);
+    renderChangeCreateForm();
+    refreshAggFields();
+}
+
+/* ========== 变更管理：提交变更 ========== */
+function submitChange() {
+    var title = document.getElementById('changeTitle').value.trim();
+    if (!title) { alert('请输入变更标题'); return; }
+    if (currentChangeObjects.length === 0) { alert('请至少添加一个变更对象'); return; }
+    var affectFeature = document.getElementById('changeAffectFeature').value;
+    var isValuePoint = document.getElementById('changeIsValuePoint').value;
+    var changeOwner = document.getElementById('changeOwner').value.trim();
+    var sourceDept = document.getElementById('changeSourceDept').value.trim();
+    var changeReason = document.getElementById('changeReason').value.trim();
+    var reviewConclusion = document.getElementById('changeReviewConclusion').value.trim();
+    var reviewLink = document.getElementById('changeReviewLink').value.trim();
+
+    if (!affectFeature) { alert('请选择是否影响特性'); return; }
+    if (!isValuePoint) { alert('请选择是否价值点'); return; }
+    if (!changeOwner) { alert('请输入变更责任人'); return; }
+    if (!sourceDept) { alert('请输入变更来源部门'); return; }
+    if (!changeReason) { alert('请输入变更原因'); return; }
+    if (!reviewConclusion) { alert('请输入领域评审结论'); return; }
+    if (!reviewLink) { alert('请输入评审结论链接'); return; }
+
+    // 确定适配品类（取变更对象中IR的categories）
+    var categories = [];
+    currentChangeObjects.forEach(function(o) {
+        if (o.reqType === 'IR') {
+            var ir = allData.ir.find(function(d) { return d.id === o.reqId; });
+            if (ir && ir.categories) ir.categories.forEach(function(c) { if (categories.indexOf(c) < 0) categories.push(c); });
+        }
+    });
+    if (categories.length === 0) categories = ['手机'];
+
+    var reqLevel = autoAggReqLevel();
+    var changeType = autoAggChangeType();
+    var changeCategory = autoAggChangeCategory();
+
+    var newId = 'CR-2026-' + String(allData.changes.length + 1).padStart(3, '0');
+    var today = new Date().toISOString().slice(0, 10);
+
+    var change = {
+        id: newId, code: newId, title: title, status: '流程中',
+        objects: JSON.parse(JSON.stringify(currentChangeObjects)),
+        reqLevel: reqLevel, changeType: changeType, changeCategory: changeCategory,
+        affectFeature: affectFeature, isValuePoint: isValuePoint,
+        changeOwner: changeOwner, sourceDept: sourceDept.split(',').map(function(s) { return s.trim(); }),
+        irFactors: document.getElementById('changeIrFactors').value,
+        srFactors: document.getElementById('changeSrFactors').value,
+        changeReason: changeReason, reviewConclusion: reviewConclusion,
+        reviewLink: reviewLink, remark: document.getElementById('changeRemark').value.trim(),
+        applicant: changeOwner, applyDate: today, endDate: null,
+        workflow: determineWorkflow(reqLevel, changeType, categories)
+    };
+
+    allData.changes.push(change);
+    closeModal('changeCreateModal');
+    renderChangeList();
+    alert('变更已提交，流程编码：' + newId + '\n审批流程已启动');
+}
+
+/* ========== 变更管理：电子流路由 ========== */
+function determineWorkflow(reqLevel, changeType, categories) {
+    var category = categories[0] || '手机';
+    var approvers = approverConfig[category] || approverConfig['手机'];
+    var roles = [];
+
+    var hasIR = reqLevel.indexOf('初始需求IR') >= 0;
+    var hasSR = reqLevel.indexOf('系统需求SR') >= 0;
+    var hasDemand = changeType.indexOf('需求变更') >= 0;
+    var hasPlan = changeType.indexOf('计划变更') >= 0;
+
+    // 根据需求层级和变更类型确定审批角色
+    if (hasIR && hasSR) {
+        // IR + SR
+        if (hasDemand && hasPlan) {
+            roles = ['SPP', 'SE', 'SPM']; // SPP+SE+SPM
+        } else if (hasDemand) {
+            roles = ['SPP', 'SE']; // SPP+SE
+        } else { // hasPlan
+            roles = ['SPM']; // SPM
+        }
+    } else if (hasIR) {
+        // IR only
+        if (hasDemand && hasPlan) {
+            roles = ['SPP', 'SPM']; // SPP&SPM
+        } else if (hasDemand) {
+            roles = ['SPP']; // SPP
+        } else { // hasPlan
+            roles = ['SPM']; // SPM
+        }
+    } else if (hasSR) {
+        // SR only
+        if (hasDemand && hasPlan) {
+            roles = ['SE', 'SPM']; // SE&SPM
+        } else if (hasDemand) {
+            roles = ['SE']; // SE
+        } else { // hasPlan
+            roles = ['SPM']; // SPM
+        }
+    }
+
+    var steps = roles.map(function(role) {
+        return { role: role, approver: approvers[role] || '-', status: '待审批', comment: '' };
+    });
+
+    return { currentStep: 0, steps: steps };
+}
+
+/* ========== 变更管理：审批 ========== */
+function openChangeApproval(changeId) {
+    var change = allData.changes.find(function(c) { return c.id === changeId; });
+    if (!change) return;
+    currentApprovalChangeId = changeId;
+    renderChangeApprovalBody(change);
+    document.getElementById('changeApprovalModal').classList.add('show');
+}
+
+function renderChangeApprovalBody(change, isDetail) {
+    var bodyId = isDetail ? 'changeDetailBody' : 'changeApprovalBody';
+    var body = document.getElementById(bodyId);
+    var footer = document.getElementById('changeApprovalFooter');
+    var html = '';
+
+    // 变更基本信息
+    html += '<div class="change-detail-section">';
+    html += '<div class="change-section-title">变更基本信息</div>';
+    html += '<div class="change-detail-grid">';
+    html += '<div class="change-detail-item"><div class="change-detail-item-label">变更标题</div><div class="change-detail-item-value">' + escapeHtml(change.title) + '</div></div>';
+    html += '<div class="change-detail-item"><div class="change-detail-item-label">流程编码</div><div class="change-detail-item-value">' + escapeHtml(change.code) + '</div></div>';
+    html += '<div class="change-detail-item"><div class="change-detail-item-label">需求层级</div><div class="change-detail-item-value">' + escapeHtml(change.reqLevel) + '</div></div>';
+    html += '<div class="change-detail-item"><div class="change-detail-item-label">变更类型</div><div class="change-detail-item-value">' + escapeHtml(change.changeType) + '</div></div>';
+    html += '<div class="change-detail-item"><div class="change-detail-item-label">变更分类</div><div class="change-detail-item-value">' + escapeHtml(change.changeCategory) + '</div></div>';
+    html += '<div class="change-detail-item"><div class="change-detail-item-label">变更状态</div><div class="change-detail-item-value">' + getChangeStatusBadge(change.status) + '</div></div>';
+    html += '<div class="change-detail-item"><div class="change-detail-item-label">变更责任人</div><div class="change-detail-item-value">' + escapeHtml(change.changeOwner) + '</div></div>';
+    html += '<div class="change-detail-item"><div class="change-detail-item-label">申请人</div><div class="change-detail-item-value">' + escapeHtml(change.applicant) + '</div></div>';
+    html += '<div class="change-detail-item"><div class="change-detail-item-label">申请日期</div><div class="change-detail-item-value">' + escapeHtml(change.applyDate) + '</div></div>';
+    html += '<div class="change-detail-item"><div class="change-detail-item-label">是否影响特性</div><div class="change-detail-item-value">' + escapeHtml(change.affectFeature) + '</div></div>';
+    html += '<div class="change-detail-item"><div class="change-detail-item-label">是否价值点</div><div class="change-detail-item-value">' + escapeHtml(change.isValuePoint) + '</div></div>';
+    html += '<div class="change-detail-item"><div class="change-detail-item-label">变更来源部门</div><div class="change-detail-item-value">' + escapeHtml(change.sourceDept.join(',')) + '</div></div>';
+    html += '</div></div>';
+
+    // 变更原因
+    html += '<div class="change-detail-section"><div class="change-section-title">变更原因</div>';
+    html += '<div style="font-size:13px;color:#475569;line-height:1.5;padding:8px;background:#f8fafc;border-radius:6px;">' + escapeHtml(change.changeReason) + '</div></div>';
+
+    // 变更对象
+    html += '<div class="change-detail-section"><div class="change-section-title">变更对象</div>';
+    html += '<table class="change-objects-table"><thead><tr><th>变更分类</th><th>需求标题</th><th>需求编码</th><th>变更字段</th><th>变更前</th><th>变更后</th></tr></thead><tbody>';
+    change.objects.forEach(function(obj) {
+        if (obj.changes.length === 0) {
+            html += '<tr><td>' + escapeHtml(obj.changeCategory) + '</td><td>' + escapeHtml(obj.reqTitle) + '</td><td>' + escapeHtml(obj.reqCode) + '</td><td colspan="3">-</td></tr>';
+        } else {
+            obj.changes.forEach(function(ch, idx) {
+                if (idx === 0) {
+                    html += '<tr><td rowspan="' + obj.changes.length + '">' + escapeHtml(obj.changeCategory) + '</td>';
+                    html += '<td rowspan="' + obj.changes.length + '">' + escapeHtml(obj.reqTitle) + '</td>';
+                    html += '<td rowspan="' + obj.changes.length + '">' + escapeHtml(obj.reqCode) + '</td>';
+                } else {
+                    html += '<tr>';
+                }
+                html += '<td>' + escapeHtml(ch.field) + '</td>';
+                html += '<td><div class="change-before-after">' + escapeHtml(ch.before) + '</div></td>';
+                html += '<td><div class="change-before-after">' + escapeHtml(ch.after) + '</div></td>';
+                html += '</tr>';
+            });
+        }
+    });
+    html += '</tbody></table></div>';
+
+    // 审批流程时间线
+    html += '<div class="change-detail-section"><div class="change-section-title">审批流程</div>';
+    html += '<div class="workflow-timeline">';
+    // 申请人节点
+    html += '<div class="workflow-step"><div class="workflow-step-icon approved">申</div>';
+    html += '<div class="workflow-step-content"><div class="workflow-step-role">申请人</div>';
+    html += '<div class="workflow-step-approver">' + escapeHtml(change.applicant) + '</div>';
+    html += '<div class="workflow-step-status"><span class="badge badge-status-accepted">已提交</span></div></div></div>';
+
+    change.workflow.steps.forEach(function(step, i) {
+        var iconCls = 'pending';
+        var iconText = step.role.substring(0, 1);
+        if (step.status === '通过') { iconCls = 'approved'; }
+        else if (step.status === '驳回') { iconCls = 'rejected'; }
+        else if (i === change.workflow.currentStep) { iconCls = 'current'; }
+
+        html += '<div class="workflow-step"><div class="workflow-step-icon ' + iconCls + '">' + iconText + '</div>';
+        html += '<div class="workflow-step-content"><div class="workflow-step-role">' + escapeHtml(step.role) + '</div>';
+        html += '<div class="workflow-step-approver">' + escapeHtml(step.approver) + '</div>';
+        var statusBadge = step.status === '待审批' ? '<span class="badge badge-status-pending">' + step.status + '</span>'
+            : step.status === '通过' ? '<span class="badge badge-status-accepted">' + step.status + '</span>'
+            : '<span class="badge badge-status-review">' + step.status + '</span>';
+        html += '<div class="workflow-step-status">' + statusBadge + '</div>';
+        if (step.comment) {
+            html += '<div class="workflow-step-comment">' + escapeHtml(step.comment) + '</div>';
+        }
+        html += '</div></div>';
+    });
+    html += '</div></div>';
+
+    // 审批操作区（仅审批模式且当前步骤待审批时显示）
+    var currentStep = change.workflow.steps[change.workflow.currentStep];
+    if (!isDetail && currentStep && currentStep.status === '待审批') {
+        html += '<div class="change-detail-section"><div class="change-section-title">审批操作</div>';
+        html += '<textarea class="approval-textarea" id="approvalComment" placeholder="请输入审批意见（必填）：变更结论、变更风险评估、变更拒绝原因等"></textarea>';
+        html += '<div class="approval-actions">';
+        html += '<button class="toolbar-btn success" onclick="approveChange(\'通过\')">通过</button>';
+        html += '<button class="toolbar-btn warning" onclick="approveChange(\'风险通过\')">风险通过</button>';
+        html += '<button class="toolbar-btn danger" onclick="approveChange(\'驳回\')">驳回</button>';
+        html += '<button class="toolbar-btn" onclick="openTransferModal()">转办</button>';
+        html += '</div></div>';
+    }
+
+    body.innerHTML = html;
+
+    // 更新Footer（仅审批模式）
+    if (!isDetail && footer) {
+        if (currentStep && currentStep.status === '待审批') {
+            footer.innerHTML = '<button class="toolbar-btn" onclick="closeModal(\'changeApprovalModal\')">关闭</button>';
+        } else {
+            footer.innerHTML = '<button class="toolbar-btn" onclick="closeModal(\'changeApprovalModal\')">关闭</button>';
+        }
+    }
+}
+
+function approveChange(action) {
+    var change = allData.changes.find(function(c) { return c.id === currentApprovalChangeId; });
+    if (!change) return;
+    var comment = document.getElementById('approvalComment').value.trim();
+    if (!comment) { alert('请输入审批意见'); return; }
+
+    var step = change.workflow.steps[change.workflow.currentStep];
+    step.comment = comment;
+
+    if (action === '通过' || action === '风险通过') {
+        step.status = '通过';
+        change.workflow.currentStep++;
+        if (change.workflow.currentStep >= change.workflow.steps.length) {
+            change.status = '变更结束';
+            change.endDate = new Date().toISOString().slice(0, 10);
+        }
+    } else if (action === '驳回') {
+        step.status = '驳回';
+        change.status = '取消申请';
+        change.endDate = new Date().toISOString().slice(0, 10);
+    }
+
+    renderChangeList();
+    renderChangeApprovalBody(change);
+    alert(action === '通过' || action === '风险通过' ? (change.status === '变更结束' ? '审批通过，流程已结束' : '审批通过，流转到下一节点') : '已驳回，流程已退回');
+}
+
+/* ========== 变更管理：转办 ========== */
+function openTransferModal() {
+    var change = allData.changes.find(function(c) { return c.id === currentApprovalChangeId; });
+    if (!change) return;
+    var step = change.workflow.steps[change.workflow.currentStep];
+    currentTransferStepIndex = change.workflow.currentStep;
+    var body = document.getElementById('transferBody');
+    var html = '<div style="font-size:13px;margin-bottom:12px;">当前节点：' + escapeHtml(step.role) + ' - ' + escapeHtml(step.approver) + '</div>';
+    html += '<div style="font-size:13px;margin-bottom:8px;">选择新的评审人：</div>';
+    html += '<select id="transferApprover" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;">';
+    html += '<option value="">请选择</option>';
+    // 列出该品类下的所有审批人
+    var category = '手机';
+    var approvers = approverConfig[category] || approverConfig['手机'];
+    Object.keys(approvers).forEach(function(role) {
+        if (role !== step.role) {
+            html += '<option value="' + role + ':' + approvers[role] + '">' + role + ' - ' + approvers[role] + '</option>';
+        }
+    });
+    html += '</select>';
+    body.innerHTML = html;
+    document.getElementById('transferModal').classList.add('show');
+}
+
+function confirmTransfer() {
+    var select = document.getElementById('transferApprover');
+    if (!select || !select.value) { alert('请选择转办人'); return; }
+    var parts = select.value.split(':');
+    var role = parts[0], name = parts[1];
+    var change = allData.changes.find(function(c) { return c.id === currentApprovalChangeId; });
+    if (!change) return;
+    var step = change.workflow.steps[currentTransferStepIndex];
+    step.role = role;
+    step.approver = name;
+    closeModal('transferModal');
+    renderChangeApprovalBody(change);
+    alert('已转办给 ' + role + ' - ' + name);
+}
+
+/* ========== 变更管理：详情查看 ========== */
+function openChangeDetail(changeId) {
+    var change = allData.changes.find(function(c) { return c.id === changeId; });
+    if (!change) return;
+    renderChangeApprovalBody(change, true);
+    document.getElementById('changeDetailModal').classList.add('show');
 }
 
 /* ========== 启动 ========== */

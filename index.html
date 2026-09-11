@@ -199,8 +199,17 @@
                 <div class="empty-state">测试管理 - 需求测试计划与执行</div>
             </div>
             <div class="page" id="page-change-mgmt">
-                <div class="list-header"><div class="list-title">变更管理</div></div>
-                <div class="empty-state">变更管理 - 需求变更流程管理</div>
+                <div class="list-header">
+                    <div class="list-title">变更管理空间</div>
+                    <div class="list-toolbar">
+                        <button class="toolbar-btn primary" onclick="openChangeCreate()">&#43; 发起变更</button>
+                        <button class="toolbar-btn" onclick="alert('筛选条件')">&#9776; 筛选</button>
+                        <button class="toolbar-btn" onclick="alert('导出数据')">&#8681; 导出</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table" id="changeTable"></table>
+                </div>
             </div>
 
             <!-- 项目配置页面 -->
@@ -289,6 +298,76 @@
         </div>
     </div>
 </div>
+
+<!-- 变更创建弹窗 -->
+<div class="modal-overlay" id="changeCreateModal" onclick="closeModal('changeCreateModal')">
+    <div class="modal-dialog change-modal-dialog" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">发起变更</div>
+            <button class="modal-close" onclick="closeModal('changeCreateModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="changeCreateBody"></div>
+        <div class="modal-footer">
+            <button class="toolbar-btn" onclick="closeModal('changeCreateModal')">取消</button>
+            <button class="toolbar-btn primary" onclick="submitChange()">提交变更</button>
+        </div>
+    </div>
+</div>
+
+<!-- 需求选择弹窗 -->
+<div class="modal-overlay" id="reqSelectModal" onclick="closeModal('reqSelectModal')">
+    <div class="modal-dialog req-select-dialog" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title" id="reqSelectTitle">选择需求</div>
+            <button class="modal-close" onclick="closeModal('reqSelectModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="reqSelectBody"></div>
+    </div>
+</div>
+
+<!-- 变更审批弹窗 -->
+<div class="modal-overlay" id="changeApprovalModal" onclick="closeModal('changeApprovalModal')">
+    <div class="modal-dialog change-modal-dialog" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">变更审批</div>
+            <button class="modal-close" onclick="closeModal('changeApprovalModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="changeApprovalBody"></div>
+        <div class="modal-footer" id="changeApprovalFooter">
+            <button class="toolbar-btn" onclick="closeModal('changeApprovalModal')">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 变更详情弹窗 -->
+<div class="modal-overlay" id="changeDetailModal" onclick="closeModal('changeDetailModal')">
+    <div class="modal-dialog change-modal-dialog" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">变更详情</div>
+            <button class="modal-close" onclick="closeModal('changeDetailModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="changeDetailBody"></div>
+        <div class="modal-footer">
+            <button class="toolbar-btn" onclick="closeModal('changeDetailModal')">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 转办弹窗 -->
+<div class="modal-overlay" id="transferModal" onclick="closeModal('transferModal')">
+    <div class="modal-dialog transfer-dialog" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">转办给</div>
+            <button class="modal-close" onclick="closeModal('transferModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="transferBody"></div>
+        <div class="modal-footer">
+            <button class="toolbar-btn" onclick="closeModal('transferModal')">取消</button>
+            <button class="toolbar-btn primary" onclick="confirmTransfer()">确认转办</button>
+        </div>
+    </div>
+</div>
+
 <script src="script.js"></script>
 </body>
 </html>
