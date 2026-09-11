@@ -2110,6 +2110,17 @@ function openChangeCreate() {
 
 function renderChangeCreateForm() {
     var body = document.getElementById('changeCreateBody');
+
+    /* 保存已有表单值，防止重新渲染时丢失 */
+    var fv = {};
+    ['changeTitle','changeAffectFeature','changeIsValuePoint','changeOwner',
+     'changeSourceDept','changeReason','changeReviewConclusion',
+     'changeReviewLink','changeRemark','changeIrFactors','changeSrFactors'
+    ].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) fv[id] = el.value;
+    });
+
     var html = '';
 
     // 1. 变更标题
@@ -2117,14 +2128,14 @@ function renderChangeCreateForm() {
     html += '<div class="change-section-title">变更基本信息</div>';
     html += '<div class="change-info-grid">';
     html += '<div class="change-info-field"><div class="change-info-label">变更标题 <span class="required">*</span></div>';
-    html += '<div class="change-info-value"><input type="text" id="changeTitle" placeholder="请输入变更标题" style="width:100%;"></div></div>';
+    html += '<div class="change-info-value"><input type="text" id="changeTitle" placeholder="请输入变更标题" style="width:100%;" value="' + escapeHtml(fv.changeTitle || '') + '"></div></div>';
     html += '<div class="change-info-field"><div class="change-info-label">流程编码</div>';
     html += '<div class="change-info-value auto">系统自动生成</div></div>';
     html += '</div></div>';
 
     // 2. 变更对象板块
     html += '<div class="change-section">';
-    html += '<div class="change-section-title">变更对象';
+    html += '<div class="change-section-title">变更对象<span style="font-size:11px;color:#f59e0b;margin-left:8px;font-weight:normal;">若需新增SR需先新增或选取IR后才可再新增SR</span>';
     html += '<div>';
     html += '<button class="change-action-btn" onclick="addNewIR()">新增IR</button>';
     html += '<button class="change-action-btn" onclick="addNewChangeObject(\'特性\')">新增特性</button>';
@@ -2146,7 +2157,7 @@ function renderChangeCreateForm() {
                 html += '<select class="change-field-select" disabled><option value="新增" selected>新增</option></select>';
             } else {
                 html += '<select class="change-field-select" onchange="updateChangeObj(' + i + ',\'changeCategory\',this.value)">';
-                ['新增', '删除', '修改'].forEach(function(cat) {
+                ['删除', '修改'].forEach(function(cat) {
                     html += '<option value="' + cat + '"' + (obj.changeCategory === cat ? ' selected' : '') + '>' + cat + '</option>';
                 });
                 html += '</select>';
@@ -2191,8 +2202,6 @@ function renderChangeCreateForm() {
         html += '</tbody></table>';
     }
     html += '</div>';
-    // 提示词放置在变更对象后
-    html += '<div style="font-size:11px;color:#f59e0b;margin-bottom:8px;margin-top:4px;">若需新增SR需先新增或选取IR后才可再新增SR</div>';
 
     // 3. 变更信息板块
     html += '<div class="change-section">';
@@ -2206,42 +2215,42 @@ function renderChangeCreateForm() {
     html += '<div class="change-info-field"><div class="change-info-label">变更分类</div><div class="change-info-value auto" id="aggChangeCategory">' + autoAggChangeCategory() + '</div></div>';
     // 是否影响特性
     html += '<div class="change-info-field"><div class="change-info-label">是否影响特性 <span class="required">*</span></div>';
-    html += '<div class="change-info-value"><select id="changeAffectFeature"><option value="">请选择</option><option value="是">是</option><option value="否">否</option></select></div></div>';
+    html += '<div class="change-info-value"><select id="changeAffectFeature"><option value="">请选择</option><option value="是"' + (fv.changeAffectFeature === '是' ? ' selected' : '') + '>是</option><option value="否"' + (fv.changeAffectFeature === '否' ? ' selected' : '') + '>否</option></select></div></div>';
     // 是否价值点
     html += '<div class="change-info-field"><div class="change-info-label">是否价值点 <span class="required">*</span></div>';
-    html += '<div class="change-info-value"><select id="changeIsValuePoint"><option value="">请选择</option><option value="是">是</option><option value="否">否</option></select></div></div>';
+    html += '<div class="change-info-value"><select id="changeIsValuePoint"><option value="">请选择</option><option value="是"' + (fv.changeIsValuePoint === '是' ? ' selected' : '') + '>是</option><option value="否"' + (fv.changeIsValuePoint === '否' ? ' selected' : '') + '>否</option></select></div></div>';
     // 变更责任人
     html += '<div class="change-info-field"><div class="change-info-label">变更责任人 <span class="required">*</span></div>';
-    html += '<div class="change-info-value"><input type="text" id="changeOwner" placeholder="请输入"></div></div>';
+    html += '<div class="change-info-value"><input type="text" id="changeOwner" placeholder="请输入" value="' + escapeHtml(fv.changeOwner || '') + '"></div></div>';
     // 变更来源部门
     html += '<div class="change-info-field"><div class="change-info-label">变更来源部门 <span class="required">*</span></div>';
-    html += '<div class="change-info-value"><input type="text" id="changeSourceDept" placeholder="多个部门用逗号隔开"></div></div>';
+    html += '<div class="change-info-value"><input type="text" id="changeSourceDept" placeholder="多个部门用逗号隔开" value="' + escapeHtml(fv.changeSourceDept || '') + '"></div></div>';
     // IR变更因素（动态显示/隐藏）
     html += '<div class="change-info-field" id="irFactorsField" style="display:none;"><div class="change-info-label">IR变更影响因素 <span class="required">*</span></div>';
     html += '<div class="change-info-value"><select id="changeIrFactors"><option value="">请选择</option>';
     ['市场需求', '技术升级', '合规要求', '竞品对标', '用户体验'].forEach(function(v) {
-        html += '<option value="' + v + '">' + v + '</option>';
+        html += '<option value="' + v + '"' + (fv.changeIrFactors === v ? ' selected' : '') + '>' + v + '</option>';
     });
     html += '</select></div></div>';
     // SR变更因素（动态显示/隐藏）
     html += '<div class="change-info-field" id="srFactorsField" style="display:none;"><div class="change-info-label">SR变更影响因素 <span class="required">*</span></div>';
     html += '<div class="change-info-value"><select id="changeSrFactors"><option value="">请选择</option>';
     ['依赖变更', '接口变更', '性能优化', '架构调整'].forEach(function(v) {
-        html += '<option value="' + v + '">' + v + '</option>';
+        html += '<option value="' + v + '"' + (fv.changeSrFactors === v ? ' selected' : '') + '>' + v + '</option>';
     });
     html += '</select></div></div>';
     // 变更原因
     html += '<div class="change-info-field full-width"><div class="change-info-label">变更原因 <span class="required">*</span></div>';
-    html += '<div class="change-info-value"><textarea id="changeReason" placeholder="请输入变更原因" style="min-height:50px;"></textarea></div></div>';
+    html += '<div class="change-info-value"><textarea id="changeReason" placeholder="请输入变更原因" style="min-height:50px;">' + escapeHtml(fv.changeReason || '') + '</textarea></div></div>';
     // 领域评审结论
     html += '<div class="change-info-field full-width"><div class="change-info-label">领域评审结论 <span class="required">*</span></div>';
-    html += '<div class="change-info-value"><textarea id="changeReviewConclusion" placeholder="请输入评审结论" style="min-height:50px;"></textarea></div></div>';
+    html += '<div class="change-info-value"><textarea id="changeReviewConclusion" placeholder="请输入评审结论" style="min-height:50px;">' + escapeHtml(fv.changeReviewConclusion || '') + '</textarea></div></div>';
     // 评审结论链接
     html += '<div class="change-info-field full-width"><div class="change-info-label">评审结论链接 <span class="required">*</span></div>';
-    html += '<div class="change-info-value"><input type="text" id="changeReviewLink" placeholder="请上传需求变更申请表链接，可输入多个链接"></div></div>';
+    html += '<div class="change-info-value"><input type="text" id="changeReviewLink" placeholder="请上传需求变更申请表链接，可输入多个链接" value="' + escapeHtml(fv.changeReviewLink || '') + '"></div></div>';
     // 备注
     html += '<div class="change-info-field full-width"><div class="change-info-label">备注</div>';
-    html += '<div class="change-info-value"><textarea id="changeRemark" placeholder="请输入备注" style="min-height:40px;"></textarea></div></div>';
+    html += '<div class="change-info-value"><textarea id="changeRemark" placeholder="请输入备注" style="min-height:40px;">' + escapeHtml(fv.changeRemark || '') + '</textarea></div></div>';
     html += '</div></div>';
 
     body.innerHTML = html;
