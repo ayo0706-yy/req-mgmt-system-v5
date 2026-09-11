@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>需求管理系统 v5.0 最终版</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+    <!-- 侧边栏 -->
+    <div id="sidebar">
+        <div class="sidebar-header">需求管理系统 v5.0 最终版</div>
+        <div class="sidebar-nav" id="sidebarNav"></div>
+    </div>
+
+    <!-- 主区域 -->
+    <div id="main">
+        <!-- 顶部栏 -->
+        <div id="topbar">
+            <div class="project-selector" onclick="toggleProjectMenu()">
+                <span>tOS17.1</span>
+                <span class="arrow">&#9662;</span>
+            </div>
+            <div class="topbar-search">
+                <span class="search-icon">&#128269;</span>
+                <input type="text" placeholder="搜索需求编码、标题..." id="searchInput" oninput="handleSearch(this.value)">
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-btn" title="通知" onclick="alert('您有3条新通知')">
+                    &#128276;
+                    <span class="badge">3</span>
+                </div>
+                <div class="topbar-avatar" title="当前用户" onclick="alert('用户中心')">A</div>
+            </div>
+        </div>
+
+        <!-- 内容区 -->
+        <div id="content">
+            <!-- 工作台 -->
+            <div class="page active" id="page-dashboard">
+                <div class="dashboard-title">工作台</div>
+                <div class="stats-row">
+                    <div class="stat-card ir" onclick="selectNav(null,'page-ir-list')">
+                        <div class="stat-icon">&#128203;</div>
+                        <div class="stat-label">IR需求数</div>
+                        <div class="stat-value" id="stat-ir">8</div>
+                    </div>
+                    <div class="stat-card sr" onclick="selectNav(null,'page-sr-list')">
+                        <div class="stat-icon">&#128203;</div>
+                        <div class="stat-label">SR需求数</div>
+                        <div class="stat-value" id="stat-sr">12</div>
+                    </div>
+                    <div class="stat-card ar" onclick="selectNav(null,'page-ar-list')">
+                        <div class="stat-icon">&#128203;</div>
+                        <div class="stat-label">AR需求数</div>
+                        <div class="stat-value" id="stat-ar">14</div>
+                    </div>
+                </div>
+                <div class="todo-section">
+                    <div class="todo-title">
+                        <span>待办事项</span>
+                        <span class="text-sm text-muted" id="todoCount">5 项待办</span>
+                    </div>
+                    <div class="todo-list" id="todoList"></div>
+                </div>
+            </div>
+
+            <!-- 原始需求RR -->
+            <div class="page" id="page-rr-list">
+                <div class="list-header"><div class="list-title">原始需求 RR</div></div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>需求编码</th><th>标题</th><th>来源</th><th>提交人</th><th>提交时间</th><th>状态</th><th>操作</th></tr></thead>
+                        <tbody>
+                            <tr><td>RR-2026-001</td><td>用户反馈夜间拍照效果差</td><td>客户反馈</td><td>客服系统</td><td>2026-01-08</td><td>已转化为IR</td><td><span class="link-title" onclick="selectNav(null,'page-ir-list')">查看IR</span></td></tr>
+                            <tr><td>RR-2026-002</td><td>充电速度慢，需要更快充</td><td>客户反馈</td><td>客服系统</td><td>2026-01-15</td><td>已转化为IR</td><td><span class="link-title" onclick="selectNav(null,'page-ir-list')">查看IR</span></td></tr>
+                            <tr><td>RR-2026-003</td><td>折叠屏铰链异响问题</td><td>客户反馈</td><td>售后系统</td><td>2026-01-10</td><td>已转化为IR</td><td><span class="link-title" onclick="selectNav(null,'page-ir-list')">查看IR</span></td></tr>
+                            <tr><td>RR-2026-004</td><td>中东用户需要阿拉伯语语音助手</td><td>市场调研</td><td>市场部</td><td>2026-01-25</td><td>已转化为IR</td><td><span class="link-title" onclick="selectNav(null,'page-ir-list')">查看IR</span></td></tr>
+                            <tr><td>RR-2026-005</td><td>游戏发热严重，帧率不稳定</td><td>客户反馈</td><td>客服系统</td><td>2026-01-03</td><td>已转化为IR</td><td><span class="link-title" onclick="selectNav(null,'page-ir-list')">查看IR</span></td></tr>
+                            <tr><td>RR-2026-006</td><td>隐私数据安全合规要求</td><td>合规要求</td><td>法务部</td><td>2026-02-05</td><td>已转化为IR</td><td><span class="link-title" onclick="selectNav(null,'page-ir-list')">查看IR</span></td></tr>
+                            <tr><td>RR-2026-007</td><td>多摄拍照体验提升需求</td><td>技术规划</td><td>影像部</td><td>2026-02-12</td><td>已转化为IR</td><td><span class="link-title" onclick="selectNav(null,'page-ir-list')">查看IR</span></td></tr>
+                            <tr><td>RR-2026-008</td><td>系统卡顿，动画不流畅</td><td>客户反馈</td><td>客服系统</td><td>2026-02-28</td><td>已转化为IR</td><td><span class="link-title" onclick="selectNav(null,'page-ir-list')">查看IR</span></td></tr>
+                            <tr><td>RR-2026-009</td><td>需支持NFC门禁卡模拟功能</td><td>产品规划</td><td>产品部</td><td>2026-03-01</td><td>待评审</td><td><span class="text-muted">-</span></td></tr>
+                            <tr><td>RR-2026-010</td><td>屏幕刷新率自适应需求</td><td>技术规划</td><td>显示部</td><td>2026-03-05</td><td>待评审</td><td><span class="text-muted">-</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- IR列表 -->
+            <div class="page" id="page-ir-list">
+                <div class="list-header">
+                    <div class="list-title">初始需求 IR</div>
+                    <div class="list-toolbar" id="irToolbar">
+                        <button class="toolbar-btn primary" onclick="alert('新建IR需求')">&#43; 新建</button>
+                        <button class="toolbar-btn" onclick="alert('排序选项')">&#8597; 排序</button>
+                        <button class="toolbar-btn" onclick="alert('筛选条件')">&#9776; 筛选</button>
+                        <button class="toolbar-btn" onclick="alert('导入数据')">&#8682; 导入</button>
+                        <button class="toolbar-btn" onclick="alert('导出数据')">&#8681; 导出</button>
+                        <button class="toolbar-btn" onclick="alert('另存为视图')">&#128190; 另存为视图</button>
+                        <div id="irBulkBar" class="bulk-bar">
+                            <span class="bulk-count" id="irSelectedCount">已选 0 项</span>
+                            <button class="toolbar-btn danger" onclick="bulkDelete('ir')">&#128465; 删除</button>
+                            <button class="toolbar-btn warning" onclick="bulkLock('ir')">&#128274; 锁定</button>
+                            <button class="toolbar-btn" onclick="bulkUnlock('ir')">&#128275; 解锁</button>
+                            <button class="toolbar-btn success" onclick="bulkBaseline('ir')">&#128230; 生成基线</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table" id="irTable"></table>
+                </div>
+            </div>
+
+            <!-- SR列表 -->
+            <div class="page" id="page-sr-list">
+                <div class="list-header">
+                    <div class="list-title">系统需求 SR</div>
+                    <div class="list-toolbar" id="srToolbar">
+                        <button class="toolbar-btn primary" onclick="alert('新建SR需求')">&#43; 新建</button>
+                        <button class="toolbar-btn" onclick="alert('排序选项')">&#8597; 排序</button>
+                        <button class="toolbar-btn" onclick="alert('筛选条件')">&#9776; 筛选</button>
+                        <button class="toolbar-btn" onclick="alert('导入数据')">&#8682; 导入</button>
+                        <button class="toolbar-btn" onclick="alert('导出数据')">&#8681; 导出</button>
+                        <button class="toolbar-btn" onclick="alert('另存为视图')">&#128190; 另存为视图</button>
+                        <div id="srBulkBar" class="bulk-bar">
+                            <span class="bulk-count" id="srSelectedCount">已选 0 项</span>
+                            <button class="toolbar-btn danger" onclick="bulkDelete('sr')">&#128465; 删除</button>
+                            <button class="toolbar-btn warning" onclick="bulkLock('sr')">&#128274; 锁定</button>
+                            <button class="toolbar-btn" onclick="bulkUnlock('sr')">&#128275; 解锁</button>
+                            <button class="toolbar-btn success" onclick="bulkBaseline('sr')">&#128230; 生成基线</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table" id="srTable"></table>
+                </div>
+            </div>
+
+            <!-- 手机基本需求库 -->
+            <div class="page" id="page-phone-lib">
+                <div class="list-header"><div class="list-title">手机基本需求库</div></div>
+                <div class="empty-state">手机基本需求库 - 共收录 256 条基础需求，按品类分类管理</div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>需求编码</th><th>标题</th><th>品类</th><th>来源</th><th>更新时间</th></tr></thead>
+                        <tbody>
+                            <tr><td>BL-001</td><td>蓝牙5.3支持</td><td>通信</td><td>技术规划</td><td>2026-08-15</td></tr>
+                            <tr><td>BL-002</td><td>WiFi6E支持</td><td>通信</td><td>技术规划</td><td>2026-08-20</td></tr>
+                            <tr><td>BL-003</td><td>NFC门禁卡模拟</td><td>通信</td><td>客户需求</td><td>2026-08-22</td></tr>
+                            <tr><td>BL-004</td><td>屏幕刷新率120Hz</td><td>显示</td><td>产品规划</td><td>2026-08-25</td></tr>
+                            <tr><td>BL-005</td><td>超声波指纹解锁</td><td>安全</td><td>技术规划</td><td>2026-08-28</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 特性树页面 -->
+            <div class="page" id="page-tree-full">
+                <div class="list-header"><div class="list-title">整机特性树</div></div>
+                <div class="empty-state">整机特性树视图 - 展示全品类特性的树形结构</div>
+            </div>
+            <div class="page" id="page-tree-all">
+                <div class="list-header"><div class="list-title">全集特性树</div></div>
+                <div class="empty-state">全集特性树视图 - 展示所有特性的树形结构</div>
+            </div>
+            <div class="page" id="page-tree-tos">
+                <div class="list-header"><div class="list-title">tOS版本特性树</div></div>
+                <div class="empty-state">tOS版本特性树视图 - 展示当前tOS版本的特性树形结构</div>
+            </div>
+
+            <!-- 项目空间其他页面 -->
+            <div class="page" id="page-ar-list">
+                <div class="list-header"><div class="list-title">分配需求 AR</div></div>
+                <div class="table-wrap">
+                    <table class="data-table" id="arTable"></table>
+                </div>
+            </div>
+            <div class="page" id="page-version-mgmt">
+                <div class="list-header"><div class="list-title">版本管理</div></div>
+                <div class="empty-state">版本管理 - 管理需求基线版本</div>
+            </div>
+            <div class="page" id="page-baseline-mgmt">
+                <div class="list-header"><div class="list-title">基线管理</div></div>
+                <div class="baseline-info">
+                    <div class="baseline-info-card">
+                        <div class="baseline-info-label">基线总数</div>
+                        <div class="baseline-info-value" id="baselineCount">0</div>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table" id="baselineTable"></table>
+                </div>
+            </div>
+            <div class="page" id="page-test-mgmt">
+                <div class="list-header"><div class="list-title">测试管理</div></div>
+                <div class="empty-state">测试管理 - 需求测试计划与执行</div>
+            </div>
+            <div class="page" id="page-change-mgmt">
+                <div class="list-header"><div class="list-title">变更管理</div></div>
+                <div class="empty-state">变更管理 - 需求变更流程管理</div>
+            </div>
+
+            <!-- 项目配置页面 -->
+            <div class="page" id="page-config-basic">
+                <div class="list-header"><div class="list-title">基本信息</div></div>
+                <div class="detail-section">
+                    <div class="detail-section-title">项目基本信息</div>
+                    <div class="detail-grid">
+                        <div class="detail-field"><div class="detail-label">项目名称</div><div class="detail-value">tOS17.1</div></div>
+                        <div class="detail-field"><div class="detail-label">项目编码</div><div class="detail-value">PRJ-2026-17</div></div>
+                        <div class="detail-field"><div class="detail-label">项目类型</div><div class="detail-value">手机操作系统</div></div>
+                        <div class="detail-field"><div class="detail-label">项目状态</div><div class="detail-value">进行中</div></div>
+                        <div class="detail-field"><div class="detail-label">开始日期</div><div class="detail-value">2026-01-15</div></div>
+                        <div class="detail-field"><div class="detail-label">计划完成</div><div class="detail-value">2026-12-30</div></div>
+                        <div class="detail-field"><div class="detail-label">项目经理</div><div class="detail-value">张明</div></div>
+                        <div class="detail-field"><div class="detail-label">系统架构师</div><div class="detail-value">李华</div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="page" id="page-config-app">
+                <div class="list-header"><div class="list-title">应用管理</div></div>
+                <div class="empty-state">应用管理 - 管理项目包含的应用模块</div>
+            </div>
+            <div class="page" id="page-config-team">
+                <div class="list-header"><div class="list-title">团队角色</div></div>
+                <div class="empty-state">团队角色 - 管理项目团队成员和角色权限</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 抽屉遮罩 -->
+<div class="drawer-mask" id="drawerMask" onclick="closeDrawer()"></div>
+<!-- 抽屉 -->
+<div class="drawer" id="drawer">
+    <div class="drawer-header">
+        <div class="drawer-title" id="drawerTitle">详情</div>
+        <div class="drawer-edit-bar" id="drawerEditBar" style="display:none;"></div>
+        <button class="drawer-close" onclick="closeDrawer()">&times;</button>
+    </div>
+    <div class="drawer-tabs-l1" id="drawerTabsL1"></div>
+    <div class="drawer-tabs-l2" id="drawerTabsL2" style="display:none;"></div>
+    <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<!-- 锁定弹窗 -->
+<div class="modal-overlay" id="lockModal" onclick="closeModal('lockModal')">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title" id="lockModalTitle">选择锁定类型</div>
+            <button class="modal-close" onclick="closeModal('lockModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="lockModalBody"></div>
+        <div class="modal-footer">
+            <button class="toolbar-btn" onclick="closeModal('lockModal')">取消</button>
+            <button class="toolbar-btn primary" onclick="confirmLock()">确认锁定</button>
+        </div>
+    </div>
+</div>
+
+<!-- 基线弹窗 -->
+<div class="modal-overlay" id="baselineModal" onclick="closeModal('baselineModal')">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">生成基线</div>
+            <button class="modal-close" onclick="closeModal('baselineModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="baselineModalBody"></div>
+        <div class="modal-footer">
+            <button class="toolbar-btn" onclick="closeModal('baselineModal')">取消</button>
+            <button class="toolbar-btn primary" onclick="confirmBaseline()">确认生成</button>
+        </div>
+    </div>
+</div>
+
+<!-- 基线详情弹窗 -->
+<div class="modal-overlay" id="baselineDetailModal" onclick="closeModal('baselineDetailModal')">
+    <div class="modal-dialog" style="max-width:900px;" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">基线详情</div>
+            <button class="modal-close" onclick="closeModal('baselineDetailModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="baselineDetailBody"></div>
+        <div class="modal-footer">
+            <button class="toolbar-btn" onclick="closeModal('baselineDetailModal')">关闭</button>
+        </div>
+    </div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
