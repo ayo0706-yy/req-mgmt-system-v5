@@ -259,7 +259,7 @@ ul,li{list-style:none;}
 .change-type-badge{background:#ede9fe;color:#7c3aed;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;}
 
 /* 变更创建弹窗 */
-.change-modal-dialog{max-width:900px;width:90%;max-height:85vh;overflow-y:auto;}
+.change-modal-dialog{width:85%;max-width:none;max-height:92vh;overflow-y:auto;}
 .change-section{margin-bottom:20px;}
 .change-section-title{font-size:14px;font-weight:bold;color:#1e293b;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;}
 .change-objects-table{width:100%;border-collapse:collapse;font-size:12px;}
@@ -283,6 +283,8 @@ ul,li{list-style:none;}
 /* 变更信息表单 */
 .change-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;}
 .change-info-grid.three-col{grid-template-columns:1fr 1fr 1fr;}
+.change-info-grid.full-row{grid-template-columns:repeat(8,minmax(0,1fr));}
+.change-info-grid.full-row .full-width{grid-column:1/-1;}
 .change-info-field{display:flex;flex-direction:column;}
 .change-info-label{font-size:12px;color:#94a3b8;margin-bottom:2px;}
 .change-info-label .required{color:#ef4444;}

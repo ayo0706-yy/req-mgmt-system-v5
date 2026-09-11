@@ -2127,15 +2127,15 @@ function renderChangeCreateForm() {
     html += '<div class="change-section-title">变更对象';
     html += '<div>';
     html += '<button class="change-action-btn" onclick="addNewIR()">新增IR</button>';
+    html += '<button class="change-action-btn" onclick="addNewChangeObject(\'特性\')">新增特性</button>';
     html += '<button class="change-action-btn primary" onclick="openReqSelect()">选取</button>';
     html += '</div></div>';
-    html += '<div style="font-size:11px;color:#f59e0b;margin-bottom:8px;">若需新增SR需先新增或选取IR后才可再新增SR</div>';
 
     if (currentChangeObjects.length === 0) {
         html += '<div class="empty-state">暂无变更对象，请点击上方按钮选取或新增</div>';
     } else {
         html += '<table class="change-objects-table">';
-        html += '<thead><tr><th>变更分类</th><th>需求标题</th><th>需求编码</th><th>操作</th><th>变更字段</th><th>变更前</th><th>变更后</th></tr></thead>';
+        html += '<thead><tr><th>变更分类</th><th>需求标题</th><th>需求编码</th><th>操作</th></tr></thead>';
         html += '<tbody>';
         currentChangeObjects.forEach(function(obj, i) {
             var hasChanges = obj.changes.length > 0;
@@ -2191,11 +2191,13 @@ function renderChangeCreateForm() {
         html += '</tbody></table>';
     }
     html += '</div>';
+    // 提示词放置在变更对象后
+    html += '<div style="font-size:11px;color:#f59e0b;margin-bottom:8px;margin-top:4px;">若需新增SR需先新增或选取IR后才可再新增SR</div>';
 
     // 3. 变更信息板块
     html += '<div class="change-section">';
     html += '<div class="change-section-title">变更信息</div>';
-    html += '<div class="change-info-grid">';
+    html += '<div class="change-info-grid full-row">';
     // 需求层级（自动）
     html += '<div class="change-info-field"><div class="change-info-label">需求层级</div><div class="change-info-value auto" id="aggReqLevel">' + autoAggReqLevel() + '</div></div>';
     // 变更类型（自动）
@@ -2215,30 +2217,30 @@ function renderChangeCreateForm() {
     html += '<div class="change-info-field"><div class="change-info-label">变更来源部门 <span class="required">*</span></div>';
     html += '<div class="change-info-value"><input type="text" id="changeSourceDept" placeholder="多个部门用逗号隔开"></div></div>';
     // IR变更因素（动态显示/隐藏）
-    html += '<div class="change-info-field" id="irFactorsField" style="display:none;"><div class="change-info-label">IR变更因素 <span class="required">*</span></div>';
+    html += '<div class="change-info-field" id="irFactorsField" style="display:none;"><div class="change-info-label">IR变更影响因素 <span class="required">*</span></div>';
     html += '<div class="change-info-value"><select id="changeIrFactors"><option value="">请选择</option>';
     ['市场需求', '技术升级', '合规要求', '竞品对标', '用户体验'].forEach(function(v) {
         html += '<option value="' + v + '">' + v + '</option>';
     });
     html += '</select></div></div>';
     // SR变更因素（动态显示/隐藏）
-    html += '<div class="change-info-field" id="srFactorsField" style="display:none;"><div class="change-info-label">SR变更因素 <span class="required">*</span></div>';
+    html += '<div class="change-info-field" id="srFactorsField" style="display:none;"><div class="change-info-label">SR变更影响因素 <span class="required">*</span></div>';
     html += '<div class="change-info-value"><select id="changeSrFactors"><option value="">请选择</option>';
     ['依赖变更', '接口变更', '性能优化', '架构调整'].forEach(function(v) {
         html += '<option value="' + v + '">' + v + '</option>';
     });
     html += '</select></div></div>';
     // 变更原因
-    html += '<div class="change-info-field" style="grid-column:1/-1;"><div class="change-info-label">变更原因 <span class="required">*</span></div>';
+    html += '<div class="change-info-field full-width"><div class="change-info-label">变更原因 <span class="required">*</span></div>';
     html += '<div class="change-info-value"><textarea id="changeReason" placeholder="请输入变更原因" style="min-height:50px;"></textarea></div></div>';
     // 领域评审结论
-    html += '<div class="change-info-field" style="grid-column:1/-1;"><div class="change-info-label">领域评审结论 <span class="required">*</span></div>';
+    html += '<div class="change-info-field full-width"><div class="change-info-label">领域评审结论 <span class="required">*</span></div>';
     html += '<div class="change-info-value"><textarea id="changeReviewConclusion" placeholder="请输入评审结论" style="min-height:50px;"></textarea></div></div>';
     // 评审结论链接
-    html += '<div class="change-info-field" style="grid-column:1/-1;"><div class="change-info-label">评审结论链接 <span class="required">*</span></div>';
+    html += '<div class="change-info-field full-width"><div class="change-info-label">评审结论链接 <span class="required">*</span></div>';
     html += '<div class="change-info-value"><input type="text" id="changeReviewLink" placeholder="请上传需求变更申请表链接，可输入多个链接"></div></div>';
     // 备注
-    html += '<div class="change-info-field" style="grid-column:1/-1;"><div class="change-info-label">备注</div>';
+    html += '<div class="change-info-field full-width"><div class="change-info-label">备注</div>';
     html += '<div class="change-info-value"><textarea id="changeRemark" placeholder="请输入备注" style="min-height:40px;"></textarea></div></div>';
     html += '</div></div>';
 
@@ -2394,7 +2396,7 @@ function addNewChangeObject(type, parentIndex) {
         reqType: type,
         reqId: type + '-NEW-' + Date.now(),
         reqCode: type + '-2026-NEW-' + (currentChangeObjects.length + 1),
-        reqTitle: '(' + (type === 'IR' ? '新增IR' : '新增SR') + ')',
+        reqTitle: '(' + (type === 'IR' ? '新增IR' : type === 'SR' ? '新增SR' : '新增特性') + ')',
         changeCategory: '新增',
         changes: [{ field: '标题', before: '无', after: '' }]
     };
@@ -2485,7 +2487,7 @@ function editChangeObject(index) {
     currentEditOrigData = JSON.parse(JSON.stringify(reqData));
 
     /* 弹窗标题 */
-    var typeLabel = obj.reqType === 'IR' ? 'IR' : 'SR';
+    var typeLabel = obj.reqType === 'IR' ? 'IR' : obj.reqType === 'SR' ? 'SR' : '特性';
     document.getElementById('changeEditReqTitle').textContent =
         typeLabel + '需求基本信息编辑（' + (reqData.code || obj.reqCode || '') + '）';
 
@@ -2709,10 +2711,26 @@ function submitChange() {
     var irFactors = document.getElementById('changeIrFactors').value;
     var srFactors = document.getElementById('changeSrFactors').value;
     if (irFactorsField && irFactorsField.style.display !== 'none' && !irFactors) {
-        alert('请选择IR变更因素'); return;
+        alert('请选择IR变更影响因素'); return;
     }
     if (srFactorsField && srFactorsField.style.display !== 'none' && !srFactors) {
-        alert('请选择SR变更因素'); return;
+        alert('请选择SR变更影响因素'); return;
+    }
+
+    // 校验：变更分类为"修改"的对象必须有变更字段信息
+    for (var ci = 0; ci < currentChangeObjects.length; ci++) {
+        var cobj = currentChangeObjects[ci];
+        if (cobj.changeCategory === '修改' && cobj.changes.length === 0) {
+            alert('变更对象【' + (cobj.reqTitle || '') + '】的变更分类为"修改"，必须有变更字段信息，否则不允许提交'); return;
+        }
+    }
+
+    // 校验：是否影响特性为"是"时，变更对象里必须选择特性对象
+    if (affectFeature === '是') {
+        var hasFeatureObj = currentChangeObjects.some(function(o) { return o.reqType === '特性'; });
+        if (!hasFeatureObj) {
+            alert('是否影响特性选择了"是"，请在变更对象中选择或新增特性对象'); return;
+        }
     }
 
     // 确定适配品类（取变更对象中IR的categories）
