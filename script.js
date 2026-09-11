@@ -1948,8 +1948,22 @@ var currentApprovalChangeId = null; // 当前审批的变更ID
 var currentTransferStepIndex = null; // 转办的步骤索引
 
 var changeFieldOptions = {
+    '基本信息': ['状态', '需求来源', '需求分类', '价值主张', '需求等级', '需求差异类型', '适用品牌', '适用产品线', '适用市场', '适用版本', '适配品类', '事业部锁定', '标题', '描述', '责任人', '系统工程师',
+                 '系统级需求', '优先级', '开发代表', 'UX代表', '测试代表', '处理人', '归属领域', '开发部门二级', '开发部门三级', '开发责任人', '责任田', '责任田主', '归属项目'],
+    '计划排期': ['计划需求评审完成时间', '实际需求评审完成时间', '计划技术评审完成时间', '实际技术评审完成时间', '计划开发开始时间', '实际开发开始时间', '计划开发完成时间', '实际开发完成时间',
+                 '计划验收完成时间', '实际验收完成时间']
+};
+
+/* IR可编辑字段（编辑弹窗用） */
+var irEditableFields = {
     '基本信息': ['状态', '需求来源', '需求分类', '价值主张', '需求等级', '需求差异类型', '适用品牌', '适用产品线', '适用市场', '适用版本', '适配品类', '事业部锁定', '标题', '描述', '责任人', '系统工程师'],
     '计划排期': ['计划需求评审完成时间', '实际需求评审完成时间', '计划技术评审完成时间', '实际技术评审完成时间', '计划开发开始时间', '实际开发开始时间', '计划开发完成时间', '实际开发完成时间']
+};
+
+/* SR可编辑字段（编辑弹窗用） */
+var srEditableFields = {
+    '基本信息': ['状态', '需求来源', '需求分类', '价值主张', '需求差异类型', '适用品牌', '适用产品线', '适用市场', '适用版本', '适配品类', '标题', '描述', '系统级需求', '优先级', '责任人', '开发代表', 'UX代表', '测试代表', '处理人', '归属领域', '开发部门二级', '开发部门三级', '开发责任人', '责任田', '责任田主', '归属项目'],
+    '计划排期': ['计划验收完成时间', '实际验收完成时间']
 };
 
 var approverConfig = {
@@ -2108,11 +2122,10 @@ function renderChangeCreateForm() {
     html += '<div class="change-section">';
     html += '<div class="change-section-title">变更对象';
     html += '<div>';
-    html += '<button class="change-action-btn primary" onclick="openReqSelect(\'IR\')">选取IR</button>';
-    html += '<button class="change-action-btn primary" onclick="openReqSelect(\'SR\')">选取SR</button>';
     html += '<button class="change-action-btn" onclick="addNewChangeObject(\'IR\')">新增IR</button>';
+    html += '<button class="change-action-btn primary" onclick="openReqSelect()">选取</button>';
     html += '</div></div>';
-    html += '<div style="font-size:12px;color:#f59e0b;margin-bottom:8px;">提示：若需新增SR需先选取IR，再新增SR</div>';
+    html += '<div style="font-size:11px;color:#f59e0b;margin-bottom:8px;">若需新增SR需先新增或选取IR后才可再新增SR</div>';
 
     if (currentChangeObjects.length === 0) {
         html += '<div class="empty-state">暂无变更对象，请点击上方按钮选取或新增</div>';
@@ -2192,15 +2205,15 @@ function renderChangeCreateForm() {
     // 变更来源部门
     html += '<div class="change-info-field"><div class="change-info-label">变更来源部门 <span class="required">*</span></div>';
     html += '<div class="change-info-value"><input type="text" id="changeSourceDept" placeholder="多个部门用逗号隔开"></div></div>';
-    // IR变更因素
-    html += '<div class="change-info-field"><div class="change-info-label">IR变更因素</div>';
+    // IR变更因素（动态显示/隐藏）
+    html += '<div class="change-info-field" id="irFactorsField" style="display:none;"><div class="change-info-label">IR变更因素 <span class="required">*</span></div>';
     html += '<div class="change-info-value"><select id="changeIrFactors"><option value="">请选择</option>';
     ['市场需求', '技术升级', '合规要求', '竞品对标', '用户体验'].forEach(function(v) {
         html += '<option value="' + v + '">' + v + '</option>';
     });
     html += '</select></div></div>';
-    // SR变更因素
-    html += '<div class="change-info-field"><div class="change-info-label">SR变更因素</div>';
+    // SR变更因素（动态显示/隐藏）
+    html += '<div class="change-info-field" id="srFactorsField" style="display:none;"><div class="change-info-label">SR变更因素 <span class="required">*</span></div>';
     html += '<div class="change-info-value"><select id="changeSrFactors"><option value="">请选择</option>';
     ['依赖变更', '接口变更', '性能优化', '架构调整'].forEach(function(v) {
         html += '<option value="' + v + '">' + v + '</option>';
@@ -2221,6 +2234,7 @@ function renderChangeCreateForm() {
     html += '</div></div>';
 
     body.innerHTML = html;
+    refreshChangeFactors();
 }
 
 /* ========== 变更管理：自动聚合 ========== */
@@ -2265,31 +2279,89 @@ function refreshAggFields() {
     if (el1) el1.textContent = autoAggReqLevel();
     if (el2) el2.textContent = autoAggChangeType();
     if (el3) el3.textContent = autoAggChangeCategory();
+    refreshChangeFactors();
+}
+
+/* 根据需求层级动态显示/隐藏IR/SR变更因素 */
+function refreshChangeFactors() {
+    var reqLevel = autoAggReqLevel();
+    var hasIR = reqLevel.indexOf('初始需求IR') >= 0;
+    var hasSR = reqLevel.indexOf('系统需求SR') >= 0;
+    var irField = document.getElementById('irFactorsField');
+    var srField = document.getElementById('srFactorsField');
+    if (irField) irField.style.display = hasIR ? '' : 'none';
+    if (srField) srField.style.display = (hasSR && !hasIR) ? '' : 'none';
 }
 
 /* ========== 变更管理：需求选择 ========== */
-function openReqSelect(type) {
-    currentChangeReqSelectType = type;
-    document.getElementById('reqSelectTitle').textContent = '选择' + type + '需求';
+function openReqSelect() {
+    document.getElementById('reqSelectTitle').textContent = '选取需求（IR及IR层级下SR）';
     var body = document.getElementById('reqSelectBody');
-    var data = type === 'IR' ? allData.ir : allData.sr;
     var html = '';
-    if (data.length === 0) {
-        html = '<div class="empty-state">暂无可选' + type + '需求</div>';
+    if (allData.ir.length === 0) {
+        html = '<div class="empty-state">暂无可选IR需求</div>';
     } else {
-        html += '<table class="req-select-table"><thead><tr><th>选择</th><th>需求编码</th><th>标题</th><th>状态</th><th>责任人</th></tr></thead><tbody>';
-        data.forEach(function(d) {
-            var alreadySel = currentChangeObjects.some(function(o) { return o.reqId === d.id; });
-            if (alreadySel) return;
-            html += '<tr onclick="confirmReqSelect(\'' + type + "','" + d.id + "')\">";
-            html += '<td style="text-align:center;"><input type="radio" name="reqSelect"></td>';
-            html += '<td>' + escapeHtml(d.code) + '</td>';
-            html += '<td>' + escapeHtml(d.title) + '</td>';
-            html += '<td>' + escapeHtml(d.status) + '</td>';
-            html += '<td>' + escapeHtml(d.owner) + '</td>';
-            html += '</tr>';
+        html += '<div style="margin-bottom:8px;font-size:12px;color:#64748b;">点击需求行可选取IR或其下的SR</div>';
+        allData.ir.forEach(function(ir) {
+            var irAlreadySel = currentChangeObjects.some(function(o) { return o.reqId === ir.id; });
+            // IR行
+            if (!irAlreadySel) {
+                html += '<div class="req-select-ir-block" style="margin-bottom:8px;">';
+                html += '<table class="req-select-table"><tbody>';
+                html += '<tr onclick="confirmReqSelect(\'IR\',\'' + ir.id + '\')">';
+                html += '<td style="width:40px;text-align:center;"><input type="radio" name="reqSelect"></td>';
+                html += '<td style="width:70px;font-weight:600;color:#3b82f6;">IR</td>';
+                html += '<td style="width:130px;">' + escapeHtml(ir.code) + '</td>';
+                html += '<td>' + escapeHtml(ir.title) + '</td>';
+                html += '<td style="width:80px;">' + escapeHtml(ir.status) + '</td>';
+                html += '<td style="width:80px;">' + escapeHtml(ir.owner) + '</td>';
+                html += '</tr>';
+                html += '</tbody></table>';
+                // IR层级下的SR
+                var childSRs = allData.sr.filter(function(sr) { return sr.parentId === ir.id; });
+                if (childSRs.length > 0) {
+                    html += '<div style="margin-left:24px;border-left:2px solid #e2e8f0;padding-left:8px;">';
+                    html += '<table class="req-select-table"><tbody>';
+                    childSRs.forEach(function(sr) {
+                        var srAlreadySel = currentChangeObjects.some(function(o) { return o.reqId === sr.id; });
+                        if (srAlreadySel) return;
+                        html += '<tr onclick="confirmReqSelect(\'SR\',\'' + sr.id + '\')">';
+                        html += '<td style="width:40px;text-align:center;"><input type="radio" name="reqSelect"></td>';
+                        html += '<td style="width:70px;color:#7c3aed;">SR</td>';
+                        html += '<td style="width:130px;">' + escapeHtml(sr.code) + '</td>';
+                        html += '<td>' + escapeHtml(sr.title) + '</td>';
+                        html += '<td style="width:80px;">' + escapeHtml(sr.status) + '</td>';
+                        html += '<td style="width:80px;">' + escapeHtml(sr.owner) + '</td>';
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table></div>';
+                }
+                html += '</div>';
+            } else {
+                // IR已选，但SR可能未选
+                var childSRs2 = allData.sr.filter(function(sr) { return sr.parentId === ir.id; });
+                var unselectedSRs = childSRs2.filter(function(sr) { return !currentChangeObjects.some(function(o) { return o.reqId === sr.id; }); });
+                if (unselectedSRs.length > 0) {
+                    html += '<div class="req-select-ir-block" style="margin-bottom:8px;">';
+                    html += '<table class="req-select-table"><tbody>';
+                    html += '<tr style="background:#f0fdf4;"><td style="width:40px;"></td><td style="width:70px;font-weight:600;color:#16a34a;">IR</td><td style="width:130px;">' + escapeHtml(ir.code) + '</td><td>' + escapeHtml(ir.title) + '</td><td colspan="2" style="font-size:11px;color:#16a34a;">已选取</td></tr>';
+                    html += '</tbody></table>';
+                    html += '<div style="margin-left:24px;border-left:2px solid #e2e8f0;padding-left:8px;">';
+                    html += '<table class="req-select-table"><tbody>';
+                    unselectedSRs.forEach(function(sr) {
+                        html += '<tr onclick="confirmReqSelect(\'SR\',\'' + sr.id + '\')">';
+                        html += '<td style="width:40px;text-align:center;"><input type="radio" name="reqSelect"></td>';
+                        html += '<td style="width:70px;color:#7c3aed;">SR</td>';
+                        html += '<td style="width:130px;">' + escapeHtml(sr.code) + '</td>';
+                        html += '<td>' + escapeHtml(sr.title) + '</td>';
+                        html += '<td style="width:80px;">' + escapeHtml(sr.status) + '</td>';
+                        html += '<td style="width:80px;">' + escapeHtml(sr.owner) + '</td>';
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table></div></div>';
+                }
+            }
         });
-        html += '</tbody></table>';
     }
     body.innerHTML = html;
     document.getElementById('reqSelectModal').classList.add('show');
@@ -2332,10 +2404,155 @@ function removeChangeObject(index) {
     renderChangeCreateForm();
 }
 
+/* ========== 变更管理：编辑需求基本信息 ========== */
+var currentEditChangeObjIndex = null;
+var currentEditOrigData = null;
+
 function editChangeObject(index) {
     var obj = currentChangeObjects[index];
-    var newTitle = prompt('请输入需求标题', obj.reqTitle);
-    if (newTitle !== null) { obj.reqTitle = newTitle; renderChangeCreateForm(); }
+    if (!obj) return;
+    currentEditChangeObjIndex = index;
+
+    /* 查找需求数据 */
+    var reqData;
+    if (obj.reqType === 'IR') {
+        reqData = allData.ir.find(function(i) { return i.id === obj.reqId; });
+    } else {
+        reqData = allData.sr.find(function(s) { return s.id === obj.reqId; });
+    }
+    /* 新增的需求（尚未保存到allData），使用空白模板 */
+    if (!reqData) {
+        reqData = { code: obj.reqCode, title: obj.reqTitle };
+    }
+
+    /* 存储原始数据深拷贝，用于后续比对 */
+    currentEditOrigData = JSON.parse(JSON.stringify(reqData));
+
+    /* 弹窗标题 */
+    var typeLabel = obj.reqType === 'IR' ? 'IR' : 'SR';
+    document.getElementById('changeEditReqTitle').textContent =
+        typeLabel + '需求基本信息编辑（' + (reqData.code || obj.reqCode || '') + '）';
+
+    /* 根据需求类型选择字段集 */
+    var fieldsConfig = obj.reqType === 'IR' ? irEditableFields : srEditableFields;
+
+    var body = document.getElementById('changeEditReqBody');
+    var html = '';
+
+    /* 基本信息 */
+    html += '<div class="detail-section">';
+    html += '<div class="detail-section-title">基本信息</div>';
+    html += '<div class="detail-grid">';
+    fieldsConfig['基本信息'].forEach(function(label) {
+        var prop = fieldLabelToProp[label];
+        var val = reqData[prop];
+        if (dropdownOptions[label]) {
+            html += selectField(label, val, dropdownOptions[label], false, true);
+        } else if (multiSelectOptions[label]) {
+            html += multiSelectField(label, val, multiSelectOptions[label], false, true);
+        } else if (label === '适配品类') {
+            html += categoryField(label, val, true);
+        } else if (label === '描述') {
+            html += textareaField(label, val, true, true);
+        } else {
+            html += field(label, val, false, true);
+        }
+    });
+    html += '</div></div>';
+
+    /* 计划排期 */
+    html += '<div class="detail-section">';
+    html += '<div class="detail-section-title">计划排期</div>';
+    html += '<div class="detail-grid three-col">';
+    fieldsConfig['计划排期'].forEach(function(label) {
+        var prop = fieldLabelToProp[label];
+        var val = reqData[prop];
+        html += dateField(label, val, false, true);
+    });
+    html += '</div></div>';
+
+    body.innerHTML = html;
+    document.getElementById('changeEditReqModal').classList.add('show');
+}
+
+function saveChangeObjEdit() {
+    if (currentEditChangeObjIndex === null || !currentEditOrigData) return;
+
+    var obj = currentChangeObjects[currentEditChangeObjIndex];
+    var origData = currentEditOrigData;
+    var fieldsConfig = obj.reqType === 'IR' ? irEditableFields : srEditableFields;
+    var allFields = fieldsConfig['基本信息'].concat(fieldsConfig['计划排期']);
+    var newChanges = [];
+
+    allFields.forEach(function(label) {
+        var prop = fieldLabelToProp[label];
+        var origVal = origData[prop];
+
+        if (multiSelectOptions[label] || label === '适配品类') {
+            /* 多选/分类：收集勾选的checkbox */
+            var checkboxes = document.querySelectorAll('#changeEditReqBody [data-field="' + label + '"]:checked');
+            var newVal = Array.prototype.map.call(checkboxes, function(cb) { return cb.value; });
+            /* 规范化原始值为数组 */
+            var origArr = [];
+            if (Array.isArray(origVal)) {
+                origArr = origVal.slice();
+            } else if (origVal) {
+                origArr = String(origVal).split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s; });
+            }
+            /* 比较数组 */
+            var changed = false;
+            if (newVal.length !== origArr.length) {
+                changed = true;
+            } else {
+                for (var i = 0; i < newVal.length; i++) {
+                    if (origArr.indexOf(newVal[i]) < 0) { changed = true; break; }
+                }
+            }
+            if (changed) {
+                newChanges.push({
+                    field: label,
+                    before: origArr.join(', ') || '（空）',
+                    after: newVal.join(', ') || '（空）'
+                });
+            }
+        } else {
+            /* 单值字段：text, select, date, textarea */
+            var inputEl = document.querySelector('#changeEditReqBody [data-field="' + label + '"]');
+            var newVal = inputEl ? inputEl.value : '';
+            var origStr = (origVal === null || origVal === undefined) ? '' : String(origVal);
+            if (newVal !== origStr) {
+                newChanges.push({
+                    field: label,
+                    before: origStr || '（空）',
+                    after: newVal || '（空）'
+                });
+            }
+        }
+    });
+
+    /* 更新变更对象的变更明细 */
+    obj.changes = newChanges;
+
+    /* 同步更新标题 */
+    var titleInput = document.querySelector('#changeEditReqBody [data-field="标题"]');
+    if (titleInput && titleInput.value) {
+        obj.reqTitle = titleInput.value;
+    }
+
+    /* 关闭弹窗 */
+    closeModal('changeEditReqModal');
+
+    /* 重置全局变量 */
+    currentEditChangeObjIndex = null;
+    currentEditOrigData = null;
+
+    /* 重新渲染表单 */
+    renderChangeCreateForm();
+
+    /* 反馈提示 */
+    if (newChanges.length > 0) {
+        /* 在控制台记录，不弹窗打断流程 */
+    }
 }
 
 function updateChangeObj(index, prop, value) {
@@ -2387,6 +2604,18 @@ function submitChange() {
     if (!changeReason) { alert('请输入变更原因'); return; }
     if (!reviewConclusion) { alert('请输入领域评审结论'); return; }
     if (!reviewLink) { alert('请输入评审结论链接'); return; }
+
+    // 动态验证IR/SR变更因素
+    var irFactorsField = document.getElementById('irFactorsField');
+    var srFactorsField = document.getElementById('srFactorsField');
+    var irFactors = document.getElementById('changeIrFactors').value;
+    var srFactors = document.getElementById('changeSrFactors').value;
+    if (irFactorsField && irFactorsField.style.display !== 'none' && !irFactors) {
+        alert('请选择IR变更因素'); return;
+    }
+    if (srFactorsField && srFactorsField.style.display !== 'none' && !srFactors) {
+        alert('请选择SR变更因素'); return;
+    }
 
     // 确定适配品类（取变更对象中IR的categories）
     var categories = [];

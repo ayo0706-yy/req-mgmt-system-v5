@@ -353,6 +353,21 @@
     </div>
 </div>
 
+<!-- 变更对象编辑弹窗 -->
+<div class="modal-overlay" id="changeEditReqModal" onclick="closeModal('changeEditReqModal')">
+    <div class="modal-dialog change-modal-dialog" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title" id="changeEditReqTitle">编辑需求信息</div>
+            <button class="modal-close" onclick="closeModal('changeEditReqModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="changeEditReqBody"></div>
+        <div class="modal-footer">
+            <button class="toolbar-btn" onclick="closeModal('changeEditReqModal')">取消</button>
+            <button class="toolbar-btn primary" onclick="saveChangeObjEdit()">保存并识别变更</button>
+        </div>
+    </div>
+</div>
+
 <!-- 转办弹窗 -->
 <div class="modal-overlay" id="transferModal" onclick="closeModal('transferModal')">
     <div class="modal-dialog transfer-dialog" onclick="event.stopPropagation()">
