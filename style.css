@@ -254,6 +254,8 @@ ul,li{list-style:none;}
 .change-status-flow{background:#dbeafe;color:#3b82f6;}
 .change-status-done{background:#dcfce7;color:#16a34a;}
 .change-status-cancel{background:#fee2e2;color:#ef4444;}
+.change-status-pending-confirm{background:#fef3c7;color:#d97706;}
+.change-status-cancelled{background:#f1f5f9;color:#94a3b8;}
 .change-type-badge{background:#ede9fe;color:#7c3aed;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;}
 
 /* 变更创建弹窗 */
@@ -272,8 +274,9 @@ ul,li{list-style:none;}
 .change-action-btn.primary{color:#3b82f6;border-color:#bfdbfe;}
 .change-action-btn.primary:hover{background:#eff6fe;}
 .change-object-row{cursor:pointer;}
-.change-object-row.collapsed .change-detail-rows{display:none;}
-.change-object-row .expand-indicator{font-size:10px;color:#94a3b8;user-select:none;display:inline-block;width:14px;text-align:center;}
+.change-object-row.collapsed + .change-detail-rows{display:none;}
+.change-object-row .expand-indicator{font-size:10px;color:#94a3b8;user-select:none;display:inline-block;width:14px;text-align:center;transition:transform 0.2s;}
+.change-object-row.collapsed .expand-indicator{transform:rotate(-90deg);}
 .change-field-select{padding:4px 6px;border:1px solid #e2e8f0;border-radius:4px;font-size:11px;background:#fff;outline:none;min-width:120px;}
 .change-before-input,.change-after-input{padding:4px 6px;border:1px solid #e2e8f0;border-radius:4px;font-size:11px;background:#fff;outline:none;width:100%;min-height:28px;}
 
@@ -289,16 +292,16 @@ ul,li{list-style:none;}
 .change-info-value textarea{min-height:50px;resize:vertical;line-height:1.5;}
 .change-info-value.auto{background:#f8fafc;padding:6px 8px;border-radius:4px;color:#64748b;}
 
-/* 审批流程 */
-.workflow-timeline{padding:12px 0;}
-.workflow-step{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #f1f5f9;}
-.workflow-step:last-child{border-bottom:none;}
-.workflow-step-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;flex-shrink:0;}
+/* 审批流程（横向布局） */
+.workflow-timeline{padding:12px 0;display:flex;flex-wrap:wrap;align-items:flex-start;}
+.workflow-step{display:flex;flex-direction:column;align-items:center;padding:8px 16px;flex:1;min-width:120px;text-align:center;border-right:1px solid #e2e8f0;}
+.workflow-step:last-child{border-right:none;}
+.workflow-step-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;flex-shrink:0;margin-bottom:6px;}
 .workflow-step-icon.pending{background:#f1f5f9;color:#94a3b8;border:2px solid #e2e8f0;}
 .workflow-step-icon.approved{background:#dcfce7;color:#16a34a;border:2px solid #86efac;}
 .workflow-step-icon.rejected{background:#fee2e2;color:#ef4444;border:2px solid #fecaca;}
 .workflow-step-icon.current{background:#dbeafe;color:#3b82f6;border:2px solid #93c5fd;}
-.workflow-step-content{flex:1;}
+.workflow-step-content{text-align:center;flex:1;}
 .workflow-step-role{font-size:13px;font-weight:600;color:#1e293b;}
 .workflow-step-approver{font-size:12px;color:#64748b;}
 .workflow-step-status{font-size:11px;margin-top:2px;}

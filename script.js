@@ -1946,6 +1946,7 @@ var currentChangeObjects = []; // 变更对象数组
 var currentChangeReqSelectType = null; // 需求选择类型
 var currentApprovalChangeId = null; // 当前审批的变更ID
 var currentTransferStepIndex = null; // 转办的步骤索引
+var currentResubmitChangeId = null; // 当前重新提交的变更ID（驳回后修改重提）
 
 var changeFieldOptions = {
     '基本信息': ['状态', '需求来源', '需求分类', '价值主张', '需求等级', '需求差异类型', '适用品牌', '适用产品线', '适用市场', '适用版本', '适配品类', '事业部锁定', '标题', '描述', '责任人', '系统工程师',
@@ -2045,7 +2046,7 @@ function generateChangeSampleData() {
 
 /* ========== 变更管理：状态Badge ========== */
 function getChangeStatusBadge(status) {
-    var map = { '草稿': 'change-status-draft', '流程中': 'change-status-flow', '变更结束': 'change-status-done', '取消申请': 'change-status-cancel' };
+    var map = { '草稿': 'change-status-draft', '流程中': 'change-status-flow', '变更结束': 'change-status-done', '取消申请': 'change-status-cancel', '待申请人确认': 'change-status-pending-confirm', '已取消': 'change-status-cancelled' };
     var cls = map[status] || 'change-status-draft';
     return '<span class="badge ' + cls + '">' + escapeHtml(status) + '</span>';
 }
@@ -2087,6 +2088,8 @@ function renderChangeList() {
         html += '<td class="col-action">';
         if (c.status === '流程中') {
             html += '<button class="toolbar-btn" style="padding:4px 8px;font-size:12px;" onclick="openChangeApproval(\'' + c.id + '\')">审批</button>';
+        } else if (c.status === '待申请人确认') {
+            html += '<button class="toolbar-btn" style="padding:4px 8px;font-size:12px;border-color:#f59e0b;color:#d97706;" onclick="openChangeApproval(\'' + c.id + '\')">处理</button>';
         } else {
             html += '<button class="toolbar-btn" style="padding:4px 8px;font-size:12px;" onclick="openChangeDetail(\'' + c.id + '\')">查看</button>';
         }
@@ -2100,6 +2103,7 @@ function renderChangeList() {
 /* ========== 变更管理：发起变更 ========== */
 function openChangeCreate() {
     currentChangeObjects = [];
+    currentResubmitChangeId = null;
     renderChangeCreateForm();
     document.getElementById('changeCreateModal').classList.add('show');
 }
@@ -2122,7 +2126,7 @@ function renderChangeCreateForm() {
     html += '<div class="change-section">';
     html += '<div class="change-section-title">变更对象';
     html += '<div>';
-    html += '<button class="change-action-btn" onclick="addNewChangeObject(\'IR\')">新增IR</button>';
+    html += '<button class="change-action-btn" onclick="addNewIR()">新增IR</button>';
     html += '<button class="change-action-btn primary" onclick="openReqSelect()">选取</button>';
     html += '</div></div>';
     html += '<div style="font-size:11px;color:#f59e0b;margin-bottom:8px;">若需新增SR需先新增或选取IR后才可再新增SR</div>';
@@ -2137,11 +2141,17 @@ function renderChangeCreateForm() {
             var hasChanges = obj.changes.length > 0;
             // 对象摘要行
             html += '<tr class="change-object-row' + (hasChanges ? '' : ' collapsed') + '" id="changeObjRow' + i + '">';
-            html += '<td><select class="change-field-select" onchange="updateChangeObj(' + i + ',\'changeCategory\',this.value)">';
-            ['新增', '删除', '修改'].forEach(function(cat) {
-                html += '<option value="' + cat + '"' + (obj.changeCategory === cat ? ' selected' : '') + '>' + cat + '</option>';
-            });
-            html += '</select></td>';
+            html += '<td>';
+            if (obj.changeCategory === '新增') {
+                html += '<select class="change-field-select" disabled><option value="新增" selected>新增</option></select>';
+            } else {
+                html += '<select class="change-field-select" onchange="updateChangeObj(' + i + ',\'changeCategory\',this.value)">';
+                ['新增', '删除', '修改'].forEach(function(cat) {
+                    html += '<option value="' + cat + '"' + (obj.changeCategory === cat ? ' selected' : '') + '>' + cat + '</option>';
+                });
+                html += '</select>';
+            }
+            html += '</td>';
             html += '<td>' + escapeHtml(obj.reqTitle || '(待填写)') + '</td>';
             html += '<td>' + escapeHtml(obj.reqCode || '(待生成)') + '</td>';
             html += '<td>';
@@ -2156,7 +2166,7 @@ function renderChangeCreateForm() {
                 html += '<span class="expand-indicator" onclick="toggleChangeObjRow(' + i + ')">&#9660;</span>';
                 html += '<span style="font-size:11px;color:#64748b;">' + obj.changes.length + '项变更</span>';
             } else {
-                html += '<button class="change-action-btn primary" onclick="event.stopPropagation();addChangeFieldRow(' + i + ')">添加变更字段</button>';
+                html += '<span style="font-size:11px;color:#94a3b8;">无变更字段</span>';
             }
             html += '</td>';
             html += '</tr>';
@@ -2175,7 +2185,6 @@ function renderChangeCreateForm() {
                     html += '</tr>';
                 });
                 html += '</tbody></table>';
-                html += '<div style="margin-top:6px;"><button class="change-action-btn primary" onclick="addChangeFieldRow(' + i + ')">添加变更字段</button></div>';
                 html += '</td></tr>';
             }
         });
@@ -2398,6 +2407,53 @@ function addNewChangeObject(type, parentIndex) {
     renderChangeCreateForm();
 }
 
+/* ========== 变更管理：新增IR（直接弹出编辑弹窗） ========== */
+var isAddingNewIR = false;
+
+function addNewIR() {
+    isAddingNewIR = true;
+    currentEditChangeObjIndex = null;
+    currentEditOrigData = {};
+
+    document.getElementById('changeEditReqTitle').textContent = '新增IR需求基本信息';
+
+    var fieldsConfig = irEditableFields;
+    var body = document.getElementById('changeEditReqBody');
+    var html = '';
+
+    /* 基本信息 */
+    html += '<div class="detail-section">';
+    html += '<div class="detail-section-title">基本信息</div>';
+    html += '<div class="detail-grid">';
+    fieldsConfig['基本信息'].forEach(function(label) {
+        var val = '';
+        if (dropdownOptions[label]) {
+            html += selectField(label, val, dropdownOptions[label], false, true);
+        } else if (multiSelectOptions[label]) {
+            html += multiSelectField(label, val, multiSelectOptions[label], false, true);
+        } else if (label === '适配品类') {
+            html += categoryField(label, val, true);
+        } else if (label === '描述') {
+            html += textareaField(label, val, true, true);
+        } else {
+            html += field(label, val, false, true);
+        }
+    });
+    html += '</div></div>';
+
+    /* 计划排期 */
+    html += '<div class="detail-section">';
+    html += '<div class="detail-section-title">计划排期</div>';
+    html += '<div class="detail-grid three-col">';
+    fieldsConfig['计划排期'].forEach(function(label) {
+        html += dateField(label, '', false, true);
+    });
+    html += '</div></div>';
+
+    body.innerHTML = html;
+    document.getElementById('changeEditReqModal').classList.add('show');
+}
+
 /* ========== 变更管理：对象操作 ========== */
 function removeChangeObject(index) {
     currentChangeObjects.splice(index, 1);
@@ -2476,9 +2532,51 @@ function editChangeObject(index) {
 }
 
 function saveChangeObjEdit() {
-    if (currentEditChangeObjIndex === null || !currentEditOrigData) return;
+    if (currentEditChangeObjIndex === null && !isAddingNewIR) return;
+
+    /* 新增IR模式：不比对变更前后，直接创建记录 */
+    if (isAddingNewIR) {
+        var titleInput = document.querySelector('#changeEditReqBody [data-field="标题"]');
+        var title = titleInput ? titleInput.value.trim() : '';
+        if (!title) { alert('请输入标题'); return; }
+
+        var obj = {
+            reqType: 'IR',
+            reqId: 'IR-NEW-' + Date.now(),
+            reqCode: 'IR-2026-NEW-' + (currentChangeObjects.length + 1),
+            reqTitle: title,
+            changeCategory: '新增',
+            changes: []
+        };
+        currentChangeObjects.push(obj);
+
+        closeModal('changeEditReqModal');
+        isAddingNewIR = false;
+        currentEditChangeObjIndex = null;
+        currentEditOrigData = null;
+        renderChangeCreateForm();
+        refreshAggFields();
+        return;
+    }
+
+    if (!currentEditOrigData) return;
 
     var obj = currentChangeObjects[currentEditChangeObjIndex];
+
+    /* 变更分类为"新增"的对象：不比对变更前后，仅更新标题 */
+    if (obj.changeCategory === '新增') {
+        var newTitleInput = document.querySelector('#changeEditReqBody [data-field="标题"]');
+        if (newTitleInput && newTitleInput.value.trim()) {
+            obj.reqTitle = newTitleInput.value.trim();
+        }
+        closeModal('changeEditReqModal');
+        currentEditChangeObjIndex = null;
+        currentEditOrigData = null;
+        renderChangeCreateForm();
+        refreshAggFields();
+        return;
+    }
+
     var origData = currentEditOrigData;
     var fieldsConfig = obj.reqType === 'IR' ? irEditableFields : srEditableFields;
     var allFields = fieldsConfig['基本信息'].concat(fieldsConfig['计划排期']);
@@ -2631,8 +2729,41 @@ function submitChange() {
     var changeType = autoAggChangeType();
     var changeCategory = autoAggChangeCategory();
 
-    var newId = 'CR-2026-' + String(allData.changes.length + 1).padStart(3, '0');
     var today = new Date().toISOString().slice(0, 10);
+
+    /* 驳回后修改重提：更新已有变更记录，重置审批流程 */
+    if (currentResubmitChangeId) {
+        var existingChange = allData.changes.find(function(c) { return c.id === currentResubmitChangeId; });
+        if (existingChange) {
+            existingChange.title = title;
+            existingChange.objects = JSON.parse(JSON.stringify(currentChangeObjects));
+            existingChange.reqLevel = reqLevel;
+            existingChange.changeType = changeType;
+            existingChange.changeCategory = changeCategory;
+            existingChange.affectFeature = affectFeature;
+            existingChange.isValuePoint = isValuePoint;
+            existingChange.changeOwner = changeOwner;
+            existingChange.sourceDept = sourceDept.split(',').map(function(s) { return s.trim(); });
+            existingChange.irFactors = document.getElementById('changeIrFactors').value;
+            existingChange.srFactors = document.getElementById('changeSrFactors').value;
+            existingChange.changeReason = changeReason;
+            existingChange.reviewConclusion = reviewConclusion;
+            existingChange.reviewLink = reviewLink;
+            existingChange.remark = document.getElementById('changeRemark').value.trim();
+            existingChange.status = '流程中';
+            existingChange.endDate = null;
+            existingChange.applyDate = today;
+            /* 重置审批流程 */
+            existingChange.workflow = determineWorkflow(reqLevel, changeType, categories);
+        }
+        currentResubmitChangeId = null;
+        closeModal('changeCreateModal');
+        renderChangeList();
+        alert('变更已修改并重新提交，审批流程已重启');
+        return;
+    }
+
+    var newId = 'CR-2026-' + String(allData.changes.length + 1).padStart(3, '0');
 
     var change = {
         id: newId, code: newId, title: title, status: '流程中',
@@ -2793,16 +2924,34 @@ function renderChangeApprovalBody(change, isDetail) {
     });
     html += '</div></div>';
 
-    // 审批操作区（仅审批模式且当前步骤待审批时显示）
+    // 审批意见区（仅审批模式且当前步骤待审批时显示）
     var currentStep = change.workflow.steps[change.workflow.currentStep];
     if (!isDetail && currentStep && currentStep.status === '待审批') {
-        html += '<div class="change-detail-section"><div class="change-section-title">审批操作</div>';
+        html += '<div class="change-detail-section"><div class="change-section-title">审批意见</div>';
         html += '<textarea class="approval-textarea" id="approvalComment" placeholder="请输入审批意见（必填）：变更结论、变更风险评估、变更拒绝原因等"></textarea>';
         html += '<div class="approval-actions">';
         html += '<button class="toolbar-btn success" onclick="approveChange(\'通过\')">通过</button>';
         html += '<button class="toolbar-btn warning" onclick="approveChange(\'风险通过\')">风险通过</button>';
         html += '<button class="toolbar-btn danger" onclick="approveChange(\'驳回\')">驳回</button>';
         html += '<button class="toolbar-btn" onclick="openTransferModal()">转办</button>';
+        html += '</div></div>';
+    }
+
+    // 申请人确认区（驳回后退回给申请人，仅审批模式且状态为待申请人确认时显示）
+    if (!isDetail && change.status === '待申请人确认') {
+        var rejectStep = change.workflow.steps[change.workflow.currentStep];
+        var rejectComment = rejectStep ? rejectStep.comment : '';
+        html += '<div class="change-detail-section"><div class="change-section-title">申请人确认</div>';
+        html += '<div style="font-size:13px;color:#d97706;padding:8px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;margin-bottom:12px;line-height:1.5;">';
+        html += '您的变更申请已被<strong>驳回</strong>。';
+        if (rejectComment) {
+            html += '<br>驳回意见：' + escapeHtml(rejectComment);
+        }
+        html += '<br>请选择「修改后重新提交」修改变更内容并重新提交审批，或「确认取消」终止此变更申请。';
+        html += '</div>';
+        html += '<div class="approval-actions">';
+        html += '<button class="toolbar-btn primary" onclick="resubmitChange()">修改后重新提交</button>';
+        html += '<button class="toolbar-btn danger" onclick="confirmCancelChange()">确认取消</button>';
         html += '</div></div>';
     }
 
@@ -2836,13 +2985,57 @@ function approveChange(action) {
         }
     } else if (action === '驳回') {
         step.status = '驳回';
-        change.status = '取消申请';
-        change.endDate = new Date().toISOString().slice(0, 10);
+        change.status = '待申请人确认';
     }
 
     renderChangeList();
     renderChangeApprovalBody(change);
-    alert(action === '通过' || action === '风险通过' ? (change.status === '变更结束' ? '审批通过，流程已结束' : '审批通过，流转到下一节点') : '已驳回，流程已退回');
+    alert(action === '通过' || action === '风险通过' ? (change.status === '变更结束' ? '审批通过，流程已结束' : '审批通过，流转到下一节点') : '已驳回，流程已退回给申请人确认');
+}
+
+/* ========== 变更管理：驳回后修改重提 ========== */
+function resubmitChange() {
+    var change = allData.changes.find(function(c) { return c.id === currentApprovalChangeId; });
+    if (!change) return;
+
+    /* 加载现有变更对象到工作数组 */
+    currentChangeObjects = JSON.parse(JSON.stringify(change.objects));
+    currentResubmitChangeId = change.id;
+
+    /* 关闭审批弹窗 */
+    closeModal('changeApprovalModal');
+
+    /* 打开发起变更表单，预填数据 */
+    renderChangeCreateForm();
+    document.getElementById('changeTitle').value = change.title;
+    document.getElementById('changeAffectFeature').value = change.affectFeature || '';
+    document.getElementById('changeIsValuePoint').value = change.isValuePoint || '';
+    document.getElementById('changeOwner').value = change.changeOwner || '';
+    document.getElementById('changeSourceDept').value = (change.sourceDept || []).join(',');
+    document.getElementById('changeReason').value = change.changeReason || '';
+    document.getElementById('changeReviewConclusion').value = change.reviewConclusion || '';
+    document.getElementById('changeReviewLink').value = change.reviewLink || '';
+    var remarkEl = document.getElementById('changeRemark');
+    if (remarkEl) remarkEl.value = change.remark || '';
+    var irFactorsEl = document.getElementById('changeIrFactors');
+    if (irFactorsEl && change.irFactors) irFactorsEl.value = change.irFactors;
+    var srFactorsEl = document.getElementById('changeSrFactors');
+    if (srFactorsEl && change.srFactors) srFactorsEl.value = change.srFactors;
+
+    refreshAggFields();
+    document.getElementById('changeCreateModal').classList.add('show');
+}
+
+/* ========== 变更管理：确认取消 ========== */
+function confirmCancelChange() {
+    if (!confirm('确认取消此变更申请？取消后无法恢复。')) return;
+    var change = allData.changes.find(function(c) { return c.id === currentApprovalChangeId; });
+    if (!change) return;
+    change.status = '已取消';
+    change.endDate = new Date().toISOString().slice(0, 10);
+    renderChangeList();
+    closeModal('changeApprovalModal');
+    alert('变更申请已取消');
 }
 
 /* ========== 变更管理：转办 ========== */
