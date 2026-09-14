@@ -322,6 +322,10 @@
             <button class="modal-close" onclick="closeModal('reqSelectModal')">&times;</button>
         </div>
         <div class="modal-body" id="reqSelectBody"></div>
+        <div class="modal-footer">
+            <button class="toolbar-btn" onclick="closeModal('reqSelectModal')">取消</button>
+            <button class="toolbar-btn primary" onclick="confirmReqSelectBatch()">确认选取</button>
+        </div>
     </div>
 </div>
 
@@ -363,7 +367,7 @@
         <div class="modal-body" id="changeEditReqBody"></div>
         <div class="modal-footer">
             <button class="toolbar-btn" onclick="closeModal('changeEditReqModal')">取消</button>
-            <button class="toolbar-btn primary" onclick="saveChangeObjEdit()">保存并识别变更</button>
+            <button class="toolbar-btn primary" onclick="saveChangeObjEdit()">提交</button>
         </div>
     </div>
 </div>

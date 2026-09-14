@@ -2138,7 +2138,6 @@ function renderChangeCreateForm() {
     html += '<div class="change-section-title">变更对象<span style="font-size:11px;color:#f59e0b;margin-left:8px;font-weight:normal;">若需新增SR需先新增或选取IR后才可再新增SR</span>';
     html += '<div>';
     html += '<button class="change-action-btn" onclick="addNewIR()">新增IR</button>';
-    html += '<button class="change-action-btn" onclick="addNewChangeObject(\'特性\')">新增特性</button>';
     html += '<button class="change-action-btn primary" onclick="openReqSelect()">选取</button>';
     html += '</div></div>';
 
@@ -2321,15 +2320,15 @@ function openReqSelect() {
     if (allData.ir.length === 0) {
         html = '<div class="empty-state">暂无可选IR需求</div>';
     } else {
-        html += '<div style="margin-bottom:8px;font-size:12px;color:#64748b;">点击需求行可选取IR或其下的SR</div>';
+        html += '<div style="margin-bottom:8px;font-size:12px;color:#64748b;">勾选需求行可多选IR或其下的SR，点击"确认选取"完成添加</div>';
         allData.ir.forEach(function(ir) {
             var irAlreadySel = currentChangeObjects.some(function(o) { return o.reqId === ir.id; });
             // IR行
             if (!irAlreadySel) {
                 html += '<div class="req-select-ir-block" style="margin-bottom:8px;">';
                 html += '<table class="req-select-table"><tbody>';
-                html += '<tr onclick="confirmReqSelect(\'IR\',\'' + ir.id + '\')">';
-                html += '<td style="width:40px;text-align:center;"><input type="radio" name="reqSelect"></td>';
+                html += '<tr style="cursor:pointer;" onclick="toggleReqCheckbox(this)">';
+                html += '<td style="width:40px;text-align:center;"><input type="checkbox" class="req-select-cb" data-type="IR" data-id="' + escapeHtml(ir.id) + '"></td>';
                 html += '<td style="width:70px;font-weight:600;color:#3b82f6;">IR</td>';
                 html += '<td style="width:130px;">' + escapeHtml(ir.code) + '</td>';
                 html += '<td>' + escapeHtml(ir.title) + '</td>';
@@ -2345,8 +2344,8 @@ function openReqSelect() {
                     childSRs.forEach(function(sr) {
                         var srAlreadySel = currentChangeObjects.some(function(o) { return o.reqId === sr.id; });
                         if (srAlreadySel) return;
-                        html += '<tr onclick="confirmReqSelect(\'SR\',\'' + sr.id + '\')">';
-                        html += '<td style="width:40px;text-align:center;"><input type="radio" name="reqSelect"></td>';
+                        html += '<tr style="cursor:pointer;" onclick="toggleReqCheckbox(this)">';
+                        html += '<td style="width:40px;text-align:center;"><input type="checkbox" class="req-select-cb" data-type="SR" data-id="' + escapeHtml(sr.id) + '"></td>';
                         html += '<td style="width:70px;color:#7c3aed;">SR</td>';
                         html += '<td style="width:130px;">' + escapeHtml(sr.code) + '</td>';
                         html += '<td>' + escapeHtml(sr.title) + '</td>';
@@ -2369,8 +2368,8 @@ function openReqSelect() {
                     html += '<div style="margin-left:24px;border-left:2px solid #e2e8f0;padding-left:8px;">';
                     html += '<table class="req-select-table"><tbody>';
                     unselectedSRs.forEach(function(sr) {
-                        html += '<tr onclick="confirmReqSelect(\'SR\',\'' + sr.id + '\')">';
-                        html += '<td style="width:40px;text-align:center;"><input type="radio" name="reqSelect"></td>';
+                        html += '<tr style="cursor:pointer;" onclick="toggleReqCheckbox(this)">';
+                        html += '<td style="width:40px;text-align:center;"><input type="checkbox" class="req-select-cb" data-type="SR" data-id="' + escapeHtml(sr.id) + '"></td>';
                         html += '<td style="width:70px;color:#7c3aed;">SR</td>';
                         html += '<td style="width:130px;">' + escapeHtml(sr.code) + '</td>';
                         html += '<td>' + escapeHtml(sr.title) + '</td>';
@@ -2387,16 +2386,32 @@ function openReqSelect() {
     document.getElementById('reqSelectModal').classList.add('show');
 }
 
-function confirmReqSelect(type, reqId) {
-    var data = type === 'IR' ? allData.ir : allData.sr;
-    var req = data.find(function(d) { return d.id === reqId; });
-    if (!req) return;
-    currentChangeObjects.push({
-        reqType: type, reqId: req.id, reqCode: req.code, reqTitle: req.title,
-        changeCategory: '修改', changes: []
+function toggleReqCheckbox(row) {
+    var cb = row.querySelector('.req-select-cb');
+    if (cb) cb.checked = !cb.checked;
+}
+
+function confirmReqSelectBatch() {
+    var checkboxes = document.querySelectorAll('#reqSelectBody .req-select-cb:checked');
+    var added = 0;
+    checkboxes.forEach(function(cb) {
+        var type = cb.getAttribute('data-type');
+        var reqId = cb.getAttribute('data-id');
+        var data = type === 'IR' ? allData.ir : allData.sr;
+        var req = data.find(function(d) { return d.id === reqId; });
+        if (req) {
+            currentChangeObjects.push({
+                reqType: type, reqId: req.id, reqCode: req.code, reqTitle: req.title,
+                changeCategory: '修改', changes: []
+            });
+            added++;
+        }
     });
     closeModal('reqSelectModal');
-    renderChangeCreateForm();
+    if (added > 0) {
+        renderChangeCreateForm();
+        refreshAggFields();
+    }
 }
 
 /* ========== 变更管理：新增变更对象 ========== */
@@ -2407,7 +2422,7 @@ function addNewChangeObject(type, parentIndex) {
         reqCode: type + '-2026-NEW-' + (currentChangeObjects.length + 1),
         reqTitle: '(' + (type === 'IR' ? '新增IR' : type === 'SR' ? '新增SR' : '新增特性') + ')',
         changeCategory: '新增',
-        changes: [{ field: '标题', before: '无', after: '' }]
+        changes: []
     };
     if (type === 'SR' && parentIndex !== undefined) {
         // 新增SR关联到IR
@@ -2580,6 +2595,17 @@ function saveChangeObjEdit() {
         if (newTitleInput && newTitleInput.value.trim()) {
             obj.reqTitle = newTitleInput.value.trim();
         }
+        closeModal('changeEditReqModal');
+        currentEditChangeObjIndex = null;
+        currentEditOrigData = null;
+        renderChangeCreateForm();
+        refreshAggFields();
+        return;
+    }
+
+    /* 变更分类为"删除"的对象：不比对变更前后，清空变更明细 */
+    if (obj.changeCategory === '删除') {
+        obj.changes = [];
         closeModal('changeEditReqModal');
         currentEditChangeObjIndex = null;
         currentEditOrigData = null;
