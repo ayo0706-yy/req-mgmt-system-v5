@@ -2521,7 +2521,9 @@ function renderChangeCreateForm() {
                 html += '<select class="change-field-select" disabled><option value="新增" selected>新增</option></select>';
             } else {
                 html += '<select class="change-field-select" onchange="updateChangeObj(' + i + ',\'changeCategory\',this.value)">';
-                ['删除', '修改'].forEach(function(cat) {
+                /* IR变更分类增加NA选项，SR不增加 */
+                var catOptions = (obj.reqType === 'IR') ? ['删除', '修改', 'NA'] : ['删除', '修改'];
+                catOptions.forEach(function(cat) {
                     html += '<option value="' + cat + '"' + (obj.changeCategory === cat ? ' selected' : '') + '>' + cat + '</option>';
                 });
                 html += '</select>';
@@ -3170,11 +3172,20 @@ function submitChange() {
         alert('请选择SR变更影响因素'); return;
     }
 
-    // 校验：变更分类为"修改"的对象必须有变更字段信息
+    // 校验：变更分类与变更字段信息的对应关系
     for (var ci = 0; ci < currentChangeObjects.length; ci++) {
         var cobj = currentChangeObjects[ci];
+        /* 规则1: 变更分类为"修改"的对象必须有变更字段信息 */
         if (cobj.changeCategory === '修改' && cobj.changes.length === 0) {
             alert('变更对象【' + (cobj.reqTitle || '') + '】的变更分类为"修改"，必须有变更字段信息，否则不允许提交'); return;
+        }
+        /* 规则2: 变更分类为"删除"的对象不能有变更字段信息 */
+        if (cobj.changeCategory === '删除' && cobj.changes.length > 0) {
+            alert('变更对象【' + (cobj.reqTitle || '') + '】的变更分类为"删除"，不能有变更字段信息，否则不允许提交'); return;
+        }
+        /* 规则3: 变更分类为"NA"的对象不能有变更字段信息 */
+        if (cobj.changeCategory === 'NA' && cobj.changes.length > 0) {
+            alert('变更对象【' + (cobj.reqTitle || '') + '】的变更分类为"NA"，不能有变更字段信息，否则不允许提交'); return;
         }
     }
 
