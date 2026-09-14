@@ -2887,9 +2887,9 @@ function generateChangeSampleData() {
             objects: [
                 { reqType: 'SR', reqId: 'SR-005', reqCode: 'SR-2026-007-01', reqTitle: '多摄融合算法（新增）',
                   changeCategory: '新增',
-                  changes: [{ field: '标题', before: '无', after: '多摄融合算法' }] }
+                  changes: [] }
             ],
-            reqLevel: '系统需求SR', changeType: '需求变更', changeCategory: '新增',
+            reqLevel: '系统需求SR', changeType: '需求变更,计划变更', changeCategory: '新增',
             affectFeature: '是', isValuePoint: '是',
             changeOwner: '王芳', sourceDept: ['影像部'],
             irFactors: '', srFactors: '新增SR需求',
@@ -2983,7 +2983,7 @@ function generateDemoChanges() {
                 { reqType:'SR', reqId:'SR-005', reqCode:'SR-2026-007-01', reqTitle:'多摄融合算法（新增）',
                   changeCategory:'新增', changes:[] }
             ],
-            reqLevel:'系统需求SR', changeType:'需求变更', changeCategory:'新增',
+            reqLevel:'系统需求SR', changeType:'需求变更,计划变更', changeCategory:'新增',
             affectFeature:'是', isValuePoint:'是',
             changeOwner:'王芳', sourceDept:['影像部'],
             irFactors:'', srFactors:'新增SR需求',
@@ -3144,7 +3144,7 @@ function generateDemoChanges() {
           '1. IR/需求变更 → SPP→SPM审批\n' +
           '2. IR/计划变更 → SPM审批\n' +
           '3. IR/需求变更+计划变更 → SPP→SPM审批\n' +
-          '4. SR/需求变更 → SE→SPM审批（含驳回场景）\n' +
+          '4. SR/新增(需求变更+计划变更) → SE→SPM审批（含驳回场景）\n' +
           '5. SR/计划变更 → SPM审批\n' +
           '6. SR/需求变更+计划变更 → SE→SPM审批\n' +
           '7. IR+SR/需求变更 → SPP→SE→SPM审批\n' +
@@ -3460,6 +3460,12 @@ function autoAggReqLevel() {
 function autoAggChangeType() {
     var hasBasic = false, hasSchedule = false;
     currentChangeObjects.forEach(function(o) {
+        // 变更分类为"新增"且未涉及任何变更字段时，视为同时涉及需求变更和计划变更
+        if (o.changeCategory === '新增' && (!o.changes || o.changes.length === 0)) {
+            hasBasic = true;
+            hasSchedule = true;
+            return;
+        }
         o.changes.forEach(function(ch) {
             if (changeFieldOptions['基本信息'].indexOf(ch.field) >= 0) hasBasic = true;
             if (changeFieldOptions['计划排期'].indexOf(ch.field) >= 0) hasSchedule = true;
