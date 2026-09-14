@@ -2177,8 +2177,8 @@ function renderChangeCreateForm() {
             var i = item.index;
             var hasChanges = obj.changes.length > 0;
             // 对象摘要行
-            html += '<tr class="change-object-row' + (hasChanges ? '' : ' collapsed') + '" id="changeObjRow' + i + '">';
-            html += '<td>';
+            html += '<tr class="change-object-row' + (hasChanges ? '' : ' collapsed') + '" id="changeObjRow' + i + '"' + (hasChanges ? ' onclick="toggleChangeObjRow(' + i + ')"' : '') + '>';
+            html += '<td onclick="event.stopPropagation()">';
             if (obj.changeCategory === '新增') {
                 html += '<select class="change-field-select" disabled><option value="新增" selected>新增</option></select>';
             } else {
@@ -2191,7 +2191,7 @@ function renderChangeCreateForm() {
             html += '</td>';
             html += '<td>' + escapeHtml(obj.reqTitle || '(待填写)') + '</td>';
             html += '<td>' + escapeHtml(obj.reqCode || '(待生成)') + '</td>';
-            html += '<td>';
+            html += '<td onclick="event.stopPropagation()">';
             if (obj.reqType === 'IR') {
                 html += '<button class="change-action-btn primary" onclick="event.stopPropagation();addNewChangeObject(\'SR\',' + i + ')">新增SR</button>';
             }
@@ -2200,7 +2200,7 @@ function renderChangeCreateForm() {
             html += '</td>';
             html += '<td colspan="3">';
             if (hasChanges) {
-                html += '<span class="expand-indicator" onclick="toggleChangeObjRow(' + i + ')">&#9660;</span>';
+                html += '<span class="expand-indicator">&#9660;</span>';
                 html += '<span style="font-size:11px;color:#64748b;">' + obj.changes.length + '项变更</span>';
             } else {
                 html += '<span style="font-size:11px;color:#94a3b8;">无变更字段</span>';
@@ -2740,7 +2740,9 @@ function updateChangeObj(index, prop, value) {
 function toggleChangeObjRow(index) {
     var row = document.getElementById('changeObjRow' + index);
     var detail = document.getElementById('changeDetailRows' + index);
-    if (row) row.classList.toggle('collapsed');
+    if (!row || !detail) return;
+    var isCollapsed = row.classList.toggle('collapsed');
+    detail.style.display = isCollapsed ? 'none' : '';
 }
 
 function addChangeFieldRow(objIndex) {
