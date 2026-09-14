@@ -2023,8 +2023,9 @@ function generateChangeSampleData() {
             reviewLink: 'https://example.com/review/001', remark: '',
             applicant: '张明', applyDate: '2026-08-20', endDate: '2026-08-25',
             workflow: {
-                currentStep: 1, steps: [
-                    { role: 'SPP', approver: '王海', status: '通过', comment: '同意变更，风险可控' }
+                currentStep: 0, steps: [
+                    { role: 'SPP', approver: '王海', status: '通过', comment: '同意变更，风险可控' },
+                    { role: 'SPM', approver: '张海军', status: '待审批', comment: '' }
                 ]
             }
         },
@@ -2069,7 +2070,8 @@ function generateChangeSampleData() {
             applicant: '王芳', applyDate: '2026-09-05', endDate: null,
             workflow: {
                 currentStep: 0, steps: [
-                    { role: 'SE', approver: '刘祥根', status: '待审批', comment: '' }
+                    { role: 'SE', approver: '刘祥根', status: '待审批', comment: '' },
+                    { role: 'SPM', approver: '张海军', status: '待审批', comment: '' }
                 ]
             }
         }
@@ -2097,7 +2099,10 @@ function generateDemoChanges() {
             changeReason:'AI夜景算法需迁移至新平台架构，归属项目从tOS17.0变更为tOS17.1',
             reviewConclusion:'评审通过', reviewLink:'https://example.com/review/demo1', remark:'',
             applicant:'张明', applyDate:'2026-09-10', endDate:null,
-            workflow:{ currentStep:0, steps:[{ role:'SPP', approver:'王海', status:'待审批', comment:'' }] }
+            workflow:{ currentStep:0, steps:[
+                { role:'SPP', approver:'王海', status:'待审批', comment:'' },
+                { role:'SPM', approver:'张海军', status:'待审批', comment:'' }
+            ] }
         },
         /* 场景2: IR / 计划变更 → SPM */
         {
@@ -2158,7 +2163,8 @@ function generateDemoChanges() {
             reviewConclusion:'', reviewLink:'', remark:'',
             applicant:'王芳', applyDate:'2026-09-05', endDate:null,
             workflow:{ currentStep:0, steps:[
-                { role:'SE', approver:'刘祥根', status:'驳回', comment:'需求描述不够详细，请补充验收标准' }
+                { role:'SE', approver:'刘祥根', status:'驳回', comment:'需求描述不够详细，请补充验收标准' },
+                { role:'SPM', approver:'张海军', status:'待审批', comment:'' }
             ] }
         },
         /* 场景5: SR / 计划变更 → SPM */
@@ -2227,7 +2233,8 @@ function generateDemoChanges() {
             applicant:'刘洋', applyDate:'2026-09-11', endDate:null,
             workflow:{ currentStep:1, steps:[
                 { role:'SPP', approver:'王海', status:'通过', comment:'合规要求紧急，同意变更' },
-                { role:'SE', approver:'刘祥根', status:'待审批', comment:'' }
+                { role:'SE', approver:'刘祥根', status:'待审批', comment:'' },
+                { role:'SPM', approver:'张海军', status:'待审批', comment:'' }
             ] }
         },
         /* 场景8: IR+SR / 计划变更 → SPM */
@@ -2305,16 +2312,16 @@ function generateDemoChanges() {
 
     renderChangeList();
     saveToStorage();
-    alert('已生成 ' + added + ' 条电子流演示数据，覆盖9种审批路由场景：\n' +
-          '1. IR/需求变更 → SPP审批\n' +
+    alert('已生成 ' + added + ' 条电子流演示数据，覆盖9种审批路由场景（均以SPM为最终审批人）：\n' +
+          '1. IR/需求变更 → SPP→SPM审批\n' +
           '2. IR/计划变更 → SPM审批\n' +
-          '3. IR/需求变更+计划变更 → SPP&SPM审批\n' +
-          '4. SR/需求变更 → SE审批（含驳回场景）\n' +
+          '3. IR/需求变更+计划变更 → SPP→SPM审批\n' +
+          '4. SR/需求变更 → SE→SPM审批（含驳回场景）\n' +
           '5. SR/计划变更 → SPM审批\n' +
-          '6. SR/需求变更+计划变更 → SE&SPM审批\n' +
-          '7. IR+SR/需求变更 → SPP+SE审批\n' +
+          '6. SR/需求变更+计划变更 → SE→SPM审批\n' +
+          '7. IR+SR/需求变更 → SPP→SE→SPM审批\n' +
           '8. IR+SR/计划变更 → SPM审批\n' +
-          '9. IR+SR/需求变更+计划变更 → SPP+SE+SPM三级审批');
+          '9. IR+SR/需求变更+计划变更 → SPP→SE→SPM三级审批');
 }
 
 /* ========== 变更管理：状态Badge ========== */
@@ -3289,6 +3296,11 @@ function determineWorkflow(reqLevel, changeType, categories) {
         } else { // hasPlan
             roles = ['SPM']; // SPM
         }
+    }
+
+    // 确保最后一个审批人为SPM
+    if (roles.length === 0 || roles[roles.length - 1] !== 'SPM') {
+        roles.push('SPM');
     }
 
     var steps = roles.map(function(role) {
