@@ -2125,9 +2125,8 @@ function renderChangeCreateForm() {
 
     var html = '';
 
-    // 1. 变更标题
+    // 1. 变更标题（无标题栏，直接展示输入框）
     html += '<div class="change-section">';
-    html += '<div class="change-section-title">变更基本信息</div>';
     html += '<div class="change-info-grid">';
     html += '<div class="change-info-field"><div class="change-info-label">变更标题 <span class="required">*</span></div>';
     html += '<div class="change-info-value"><input type="text" id="changeTitle" placeholder="请输入变更标题" style="width:100%;" value="' + escapeHtml(fv.changeTitle || '') + '"></div></div>';
@@ -2544,7 +2543,12 @@ function editChangeObject(index) {
     }
     /* 新增的需求（尚未保存到allData），使用空白模板 */
     if (!reqData) {
-        reqData = { code: obj.reqCode, title: obj.reqTitle };
+        /* 新增的需求：优先使用tempData中保存的编辑数据 */
+        if (obj.tempData) {
+            reqData = obj.tempData;
+        } else {
+            reqData = { code: obj.reqCode, title: obj.reqTitle };
+        }
     }
 
     /* 存储原始数据深拷贝，用于后续比对 */
@@ -2597,14 +2601,35 @@ function editChangeObject(index) {
     document.getElementById('changeEditReqModal').classList.add('show');
 }
 
+/* 收集编辑弹窗中所有表单字段值，存为tempData */
+function collectFormData(fieldsConfig) {
+    var data = {};
+    var allFields = fieldsConfig['基本信息'].concat(fieldsConfig['计划排期']);
+    allFields.forEach(function(label) {
+        var prop = fieldLabelToProp[label];
+        if (multiSelectOptions[label] || label === '适配品类') {
+            var checkboxes = document.querySelectorAll('#changeEditReqBody [data-field="' + label + '"]:checked');
+            data[prop] = Array.prototype.map.call(checkboxes, function(cb) { return cb.value; });
+        } else {
+            var inputEl = document.querySelector('#changeEditReqBody [data-field="' + label + '"]');
+            data[prop] = inputEl ? inputEl.value : '';
+        }
+    });
+    return data;
+}
+
 function saveChangeObjEdit() {
     if (currentEditChangeObjIndex === null && !isAddingNewIR) return;
 
-    /* 新增IR模式：不比对变更前后，直接创建记录 */
+    /* 新增IR模式：收集全部字段数据，存入tempData */
     if (isAddingNewIR) {
         var titleInput = document.querySelector('#changeEditReqBody [data-field="标题"]');
         var title = titleInput ? titleInput.value.trim() : '';
         if (!title) { alert('请输入标题'); return; }
+
+        var formData = collectFormData(irEditableFields);
+        formData.code = 'IR-2026-NEW-' + (currentChangeObjects.length + 1);
+        formData.title = title;
 
         var obj = {
             reqType: 'IR',
@@ -2612,7 +2637,8 @@ function saveChangeObjEdit() {
             reqCode: 'IR-2026-NEW-' + (currentChangeObjects.length + 1),
             reqTitle: title,
             changeCategory: '新增',
-            changes: []
+            changes: [],
+            tempData: formData
         };
         currentChangeObjects.push(obj);
 
@@ -2629,12 +2655,17 @@ function saveChangeObjEdit() {
 
     var obj = currentChangeObjects[currentEditChangeObjIndex];
 
-    /* 变更分类为"新增"的对象：不比对变更前后，仅更新标题 */
+    /* 变更分类为"新增"的对象：收集全部字段数据，存入tempData */
     if (obj.changeCategory === '新增') {
+        var fieldsConfig = obj.reqType === 'IR' ? irEditableFields : srEditableFields;
+        var formData = collectFormData(fieldsConfig);
         var newTitleInput = document.querySelector('#changeEditReqBody [data-field="标题"]');
         if (newTitleInput && newTitleInput.value.trim()) {
             obj.reqTitle = newTitleInput.value.trim();
+            formData.title = obj.reqTitle;
         }
+        formData.code = obj.reqCode;
+        obj.tempData = formData;
         closeModal('changeEditReqModal');
         currentEditChangeObjIndex = null;
         currentEditOrigData = null;
@@ -2928,6 +2959,206 @@ function determineWorkflow(reqLevel, changeType, categories) {
     return { currentStep: 0, steps: steps };
 }
 
+/* ========== 变更管理：根据电子流流向生成测试用例 ========== */
+function generateTestCases(change) {
+    var cases = [];
+    var tcId = 1;
+
+    var hasIR = change.reqLevel.indexOf('初始需求IR') >= 0;
+    var hasSR = change.reqLevel.indexOf('系统需求SR') >= 0;
+    var hasDemand = change.changeType.indexOf('需求变更') >= 0;
+    var hasPlan = change.changeType.indexOf('计划变更') >= 0;
+
+    /* 1. 流程路由测试 */
+    var flowDesc = change.workflow.steps.map(function(s) { return s.role + '(' + s.approver + ')'; }).join(' → ');
+    var scenarioDesc = change.reqLevel + ' / ' + change.changeType;
+
+    cases.push({
+        id: 'TC-' + String(tcId++).padStart(3, '0'),
+        category: '流程路由',
+        title: '验证电子流审批路径正确',
+        precondition: '场景：' + scenarioDesc + '\n变更分类：' + change.changeCategory,
+        steps: '1.提交变更申请\n2.验证审批节点序列\n3.确认审批人列表',
+        expected: '审批路径为：' + flowDesc + '\n共' + change.workflow.steps.length + '个审批节点'
+    });
+
+    /* 2. 场景路由验证（不同需求层级+变更类型组合） */
+    if (hasIR && hasSR) {
+        if (hasDemand && hasPlan) {
+            cases.push({
+                id: 'TC-' + String(tcId++).padStart(3, '0'),
+                category: '场景路由',
+                title: 'IR+SR / 需求变更+计划变更 → SPP+SE+SPM',
+                precondition: '需求层级：IR+SR\n变更类型：需求变更+计划变更',
+                steps: '1.提交包含IR和SR的变更\n2.验证需求基本信息和计划排期均有变更\n3.验证审批流程包含SPP、SE、SPM三个节点',
+                expected: '路由到SPP → SE → SPM三级审批'
+            });
+        } else if (hasDemand) {
+            cases.push({
+                id: 'TC-' + String(tcId++).padStart(3, '0'),
+                category: '场景路由',
+                title: 'IR+SR / 需求变更 → SPP+SE',
+                precondition: '需求层级：IR+SR\n变更类型：需求变更',
+                steps: '1.提交包含IR和SR的变更\n2.验证仅需求基本信息有变更\n3.验证审批流程包含SPP、SE两个节点',
+                expected: '路由到SPP → SE两级审批'
+            });
+        } else {
+            cases.push({
+                id: 'TC-' + String(tcId++).padStart(3, '0'),
+                category: '场景路由',
+                title: 'IR+SR / 计划变更 → SPM',
+                precondition: '需求层级：IR+SR\n变更类型：计划变更',
+                steps: '1.提交包含IR和SR的变更\n2.验证仅计划排期有变更\n3.验证审批流程仅包含SPM节点',
+                expected: '路由到SPM单级审批'
+            });
+        }
+    } else if (hasIR) {
+        if (hasDemand && hasPlan) {
+            cases.push({
+                id: 'TC-' + String(tcId++).padStart(3, '0'),
+                category: '场景路由',
+                title: 'IR / 需求变更+计划变更 → SPP+SPM',
+                precondition: '需求层级：IR\n变更类型：需求变更+计划变更',
+                steps: '1.提交仅含IR的变更\n2.验证审批流程包含SPP、SPM两个节点',
+                expected: '路由到SPP → SPM两级审批'
+            });
+        } else if (hasDemand) {
+            cases.push({
+                id: 'TC-' + String(tcId++).padStart(3, '0'),
+                category: '场景路由',
+                title: 'IR / 需求变更 → SPP',
+                precondition: '需求层级：IR\n变更类型：需求变更',
+                steps: '1.提交仅含IR的需求变更\n2.验证审批流程仅包含SPP节点',
+                expected: '路由到SPP单级审批'
+            });
+        } else {
+            cases.push({
+                id: 'TC-' + String(tcId++).padStart(3, '0'),
+                category: '场景路由',
+                title: 'IR / 计划变更 → SPM',
+                precondition: '需求层级：IR\n变更类型：计划变更',
+                steps: '1.提交仅含IR的计划变更\n2.验证审批流程仅包含SPM节点',
+                expected: '路由到SPM单级审批'
+            });
+        }
+    } else if (hasSR) {
+        if (hasDemand && hasPlan) {
+            cases.push({
+                id: 'TC-' + String(tcId++).padStart(3, '0'),
+                category: '场景路由',
+                title: 'SR / 需求变更+计划变更 → SE+SPM',
+                precondition: '需求层级：SR\n变更类型：需求变更+计划变更',
+                steps: '1.提交仅含SR的变更\n2.验证审批流程包含SE、SPM两个节点',
+                expected: '路由到SE → SPM两级审批'
+            });
+        } else if (hasDemand) {
+            cases.push({
+                id: 'TC-' + String(tcId++).padStart(3, '0'),
+                category: '场景路由',
+                title: 'SR / 需求变更 → SE',
+                precondition: '需求层级：SR\n变更类型：需求变更',
+                steps: '1.提交仅含SR的需求变更\n2.验证审批流程仅包含SE节点',
+                expected: '路由到SE单级审批'
+            });
+        } else {
+            cases.push({
+                id: 'TC-' + String(tcId++).padStart(3, '0'),
+                category: '场景路由',
+                title: 'SR / 计划变更 → SPM',
+                precondition: '需求层级：SR\n变更类型：计划变更',
+                steps: '1.提交仅含SR的计划变更\n2.验证审批流程仅包含SPM节点',
+                expected: '路由到SPM单级审批'
+            });
+        }
+    }
+
+    /* 3. 各审批节点测试 */
+    change.workflow.steps.forEach(function(step, idx) {
+        cases.push({
+            id: 'TC-' + String(tcId++).padStart(3, '0'),
+            category: '审批节点',
+            title: '验证' + step.role + '审批通过功能',
+            precondition: '流程流转至第' + (idx + 1) + '步\n审批人：' + step.approver,
+            steps: '1.登录审批人' + step.approver + '\n2.查看变更详情\n3.填写审批意见\n4.点击"通过"',
+            expected: step.role + '能查看变更详情，填写意见后通过审批' + (idx < change.workflow.steps.length - 1 ? '，流程流转到下一节点' : '，流程结束')
+        });
+        cases.push({
+            id: 'TC-' + String(tcId++).padStart(3, '0'),
+            category: '审批节点',
+            title: '验证' + step.role + '驳回功能',
+            precondition: '流程流转至第' + (idx + 1) + '步\n审批人：' + step.approver,
+            steps: '1.登录审批人' + step.approver + '\n2.填写审批意见（必填）\n3.点击"驳回"',
+            expected: '流程退回给申请人，变更状态变为"待申请人确认"'
+        });
+        cases.push({
+            id: 'TC-' + String(tcId++).padStart(3, '0'),
+            category: '审批节点',
+            title: '验证' + step.role + '转办功能',
+            precondition: '流程流转至第' + (idx + 1) + '步\n审批人：' + step.approver,
+            steps: '1.登录审批人' + step.approver + '\n2.点击"转办"\n3.选择转办人\n4.确认转办',
+            expected: '审批权限转移给转办人，流程节点不改变'
+        });
+    });
+
+    /* 4. 变更内容验证测试 */
+    change.objects.forEach(function(obj) {
+        if (obj.changes.length > 0) {
+            obj.changes.forEach(function(ch) {
+                cases.push({
+                    id: 'TC-' + String(tcId++).padStart(3, '0'),
+                    category: '变更内容',
+                    title: '验证' + obj.reqTitle + '的"' + ch.field + '"变更',
+                    precondition: '变更对象：' + obj.reqCode + '（' + obj.reqType + '）\n变更分类：' + obj.changeCategory,
+                    steps: '1.查看变更对象详情\n2.验证"' + ch.field + '"字段变更前值\n3.验证"' + ch.field + '"字段变更后值',
+                    expected: '"' + ch.field + '"字段从"' + ch.before + '"变更为"' + ch.after + '"'
+                });
+            });
+        } else {
+            cases.push({
+                id: 'TC-' + String(tcId++).padStart(3, '0'),
+                category: '变更内容',
+                title: '验证' + obj.reqTitle + '的' + obj.changeCategory + '操作',
+                precondition: '变更对象：' + obj.reqCode + '（' + obj.reqType + '）\n变更分类：' + obj.changeCategory,
+                steps: '1.查看变更对象详情\n2.验证变更分类为"' + obj.changeCategory + '"',
+                expected: obj.changeCategory === '新增' ? '新增需求正确创建并关联到变更，需求编码自动生成' : obj.changeCategory === '删除' ? '删除需求正确标记，变更明细清空' : '变更明细正确展示'
+            });
+        }
+    });
+
+    /* 5. 附加场景测试 */
+    if (change.affectFeature === '是') {
+        cases.push({
+            id: 'TC-' + String(tcId++).padStart(3, '0'),
+            category: '场景验证',
+            title: '验证影响特性的变更包含特性对象',
+            precondition: '是否影响特性=是',
+            steps: '1.检查变更对象列表\n2.验证存在"特性"类型的变更对象\n3.验证特性变更内容完整',
+            expected: '变更对象中包含特性对象，特性变更内容完整准确'
+        });
+    }
+    if (change.isValuePoint === '是') {
+        cases.push({
+            id: 'TC-' + String(tcId++).padStart(3, '0'),
+            category: '场景验证',
+            title: '验证价值点变更的标记',
+            precondition: '是否价值点=是',
+            steps: '1.查看变更基本信息\n2.验证"是否价值点"字段为"是"',
+            expected: '价值点变更正确标记，便于价值点统计'
+        });
+    }
+    /* 驳回重提场景 */
+    cases.push({
+        id: 'TC-' + String(tcId++).padStart(3, '0'),
+        category: '场景验证',
+        title: '验证驳回后修改重提流程',
+        precondition: '变更被任一审批节点驳回',
+        steps: '1.审批人点击"驳回"\n2.申请人收到驳回通知\n3.申请人点击"修改后重新提交"\n4.修改变更内容\n5.重新提交',
+        expected: '变更内容更新，审批流程从头重启，状态恢复为"流程中"'
+    });
+
+    return cases;
+}
+
 /* ========== 变更管理：审批 ========== */
 function openChangeApproval(changeId) {
     var change = allData.changes.find(function(c) { return c.id === changeId; });
@@ -3018,6 +3249,24 @@ function renderChangeApprovalBody(change, isDetail) {
         html += '</div></div>';
     });
     html += '</div></div>';
+
+    // 测试用例（根据电子流流向自动生成）
+    var testCases = generateTestCases(change);
+    html += '<div class="change-detail-section"><div class="change-section-title">测试用例';
+    html += '<span style="font-size:12px;color:var(--c-text-tertiary);font-weight:normal;margin-left:8px;">根据' + change.reqLevel + '+' + change.changeType + '场景自动生成 ' + testCases.length + ' 条用例</span>';
+    html += '</div>';
+    html += '<table class="testcase-table"><thead><tr><th style="width:70px;">用例编号</th><th style="width:80px;">用例分类</th><th>用例标题</th><th>前置条件</th><th>测试步骤</th><th>预期结果</th></tr></thead><tbody>';
+    testCases.forEach(function(tc) {
+        html += '<tr>';
+        html += '<td style="font-weight:600;color:var(--c-primary);">' + escapeHtml(tc.id) + '</td>';
+        html += '<td><span class="badge badge-status-review">' + escapeHtml(tc.category) + '</span></td>';
+        html += '<td style="font-weight:600;">' + escapeHtml(tc.title) + '</td>';
+        html += '<td style="font-size:12px;color:var(--c-text-secondary);">' + escapeHtml(tc.precondition).replace(/\n/g, '<br>') + '</td>';
+        html += '<td style="font-size:12px;color:var(--c-text-secondary);">' + escapeHtml(tc.steps).replace(/\n/g, '<br>') + '</td>';
+        html += '<td style="font-size:12px;color:var(--c-text-secondary);">' + escapeHtml(tc.expected).replace(/\n/g, '<br>') + '</td>';
+        html += '</tr>';
+    });
+    html += '</tbody></table></div>';
 
     // 审批意见区（仅审批模式且当前步骤待审批时显示）
     var currentStep = change.workflow.steps[change.workflow.currentStep];

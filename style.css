@@ -341,6 +341,12 @@ ul,li{list-style:none;}
 .change-objects-table tbody td{padding:8px;border-bottom:1px solid var(--c-border-light);vertical-align:top;}
 .change-objects-table tbody tr:hover{background:var(--c-bg);}
 .change-before-after{max-width:200px;max-height:80px;overflow-y:auto;word-break:break-all;background:var(--c-bg);padding:4px 6px;border-radius:var(--radius-sm);font-size:11px;}
+
+/* 测试用例表格 */
+.testcase-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;}
+.testcase-table thead th{background:var(--c-bg-subtle);padding:8px 6px;text-align:left;font-weight:600;color:var(--c-text-secondary);border-bottom:2px solid var(--c-border);white-space:nowrap;}
+.testcase-table tbody td{padding:8px 6px;border-bottom:1px solid var(--c-border-light);vertical-align:top;}
+.testcase-table tbody tr:hover{background:var(--c-bg);}
 .change-action-btn{padding:3px 8px;border:1px solid var(--c-border);border-radius:var(--radius-sm);background:#fff;cursor:pointer;font-size:11px;color:var(--c-text-secondary);margin-right:4px;transition:all var(--t-fast);}
 .change-action-btn:hover{background:var(--c-bg);border-color:var(--c-border-strong);}
 .change-action-btn.danger{color:var(--c-danger);border-color:#fecaca;}
