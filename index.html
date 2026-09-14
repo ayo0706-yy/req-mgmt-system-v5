@@ -203,6 +203,8 @@
                     <div class="list-title">变更管理空间</div>
                     <div class="list-toolbar">
                         <button class="toolbar-btn primary" onclick="openChangeCreate()">&#43; 发起变更</button>
+                        <button class="toolbar-btn" onclick="generateDemoChanges()">&#9881; 生成测试用例</button>
+                        <button class="toolbar-btn danger" id="batchDeleteBtn" style="display:none;" onclick="deleteSelectedChanges()">&#128465; 批量删除</button>
                         <button class="toolbar-btn" onclick="alert('筛选条件')">&#9776; 筛选</button>
                         <button class="toolbar-btn" onclick="alert('导出数据')">&#8681; 导出</button>
                     </div>

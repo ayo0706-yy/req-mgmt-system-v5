@@ -75,8 +75,36 @@ var navConfig = [
 ];
 
 /* ========== 初始化 ========== */
+var STORAGE_KEY = 'reqMgmtData_v1';
+
+function saveToStorage() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
+    } catch(e) { console.warn('localStorage保存失败:', e); }
+}
+
+function loadFromStorage() {
+    try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        var parsed = JSON.parse(raw);
+        if (parsed && parsed.ir && parsed.sr && parsed.changes) {
+            allData = parsed;
+            if (!allData.ar) allData.ar = [];
+            if (!allData.baselines) allData.baselines = [];
+            return true;
+        }
+    } catch(e) { console.warn('localStorage加载失败:', e); }
+    return false;
+}
+
 function initPage() {
-    generateSampleData();
+    var loaded = loadFromStorage();
+    if (!loaded) {
+        generateSampleData();
+        generateChangeSampleData();
+        saveToStorage();
+    }
     renderSidebar();
     showPage('page-dashboard');
     renderTodoList();
@@ -924,6 +952,7 @@ function bulkUnlock(type) {
         }
     }
     alert('已解锁 ' + unlockedCount + ' 条' + prefix + '需求');
+    saveToStorage();
 }
 
 /* ========== 搜索 ========== */
@@ -1569,6 +1598,7 @@ function saveDetail() {
     if (type === 'ir') renderIRList(); else renderSRList();
     var prefix = type === 'ir' ? 'IR' : 'SR';
     document.getElementById('drawerTitle').innerHTML = getDrawerTitleHTML(item, prefix);
+    saveToStorage();
     alert('保存成功');
 }
 
@@ -1736,6 +1766,7 @@ function confirmLock() {
     selectedItems[type].clear();
     updateBulkBar(type);
     if (type === 'ir') renderIRList(); else renderSRList();
+    saveToStorage();
     if (currentDrawer === type && currentDetailId) {
         isEditing = false;
         var item = allData[type].find(function(d) { return d.id === currentDetailId; });
@@ -1847,6 +1878,7 @@ function confirmBaseline() {
     updateBulkBar(type);
     if (type === 'ir') renderIRList(); else renderSRList();
     renderBaselineList();
+    saveToStorage();
 }
 
 /* ========== 基线管理列表 ========== */
@@ -2045,6 +2077,138 @@ function generateChangeSampleData() {
     ];
 }
 
+/* 生成测试用例：自动生成多条电子流演示数据（覆盖不同场景） */
+function generateDemoChanges() {
+    var demos = [
+        /* 场景1: IR / 需求变更 → SPP */
+        {
+            title: 'AI夜景算法迁移至新平台',
+            status: '流程中',
+            objects: [
+                { reqType:'IR', reqId:'IR-001', reqCode:'IR-2026-001', reqTitle:'AI夜景算法优化',
+                  changeCategory:'修改', changes:[
+                    { field:'归属项目', before:'tOS17.0', after:'tOS17.1' },
+                    { field:'需求等级', before:'S', after:'A' }
+                  ] }
+            ],
+            reqLevel:'初始需求IR', changeType:'需求变更', changeCategory:'修改',
+            affectFeature:'否', isValuePoint:'否',
+            changeOwner:'张明', sourceDept:['产品部'],
+            irFactors:'市场需求调整', srFactors:'',
+            changeReason:'AI夜景算法需迁移至新平台架构，归属项目从tOS17.0变更为tOS17.1',
+            reviewConclusion:'评审通过', reviewLink:'https://example.com/review/demo1', remark:'',
+            applicant:'张明', applyDate:'2026-09-10', endDate:null,
+            workflow:{ currentStep:0, steps:[{ role:'SPP', approver:'王海', status:'待审批', comment:'' }] }
+        },
+        /* 场景2: SR / 计划变更 → SPM */
+        {
+            title: '快充协议SR计划排期变更',
+            status:'变更结束',
+            objects: [
+                { reqType:'SR', reqId:'SR-001', reqCode:'SR-2026-002-01', reqTitle:'快充协议适配',
+                  changeCategory:'修改', changes:[
+                    { field:'计划开发完成时间', before:'2026-09-10', after:'2026-09-25' }
+                  ] }
+            ],
+            reqLevel:'系统需求SR', changeType:'计划变更', changeCategory:'修改',
+            affectFeature:'否', isValuePoint:'否',
+            changeOwner:'李华', sourceDept:['研发部'],
+            irFactors:'', srFactors:'排期调整',
+            changeReason:'供应商芯片交付延迟，SR开发排期需后移',
+            reviewConclusion:'评审通过', reviewLink:'https://example.com/review/demo2', remark:'',
+            applicant:'李华', applyDate:'2026-09-01', endDate:'2026-09-05',
+            workflow:{ currentStep:1, steps:[{ role:'SPM', approver:'张海军', status:'通过', comment:'同意调整' }] }
+        },
+        /* 场景3: IR+SR / 需求变更+计划变更 → SPP+SE+SPM */
+        {
+            title: '显示驱动模块迁移及排期调整',
+            status:'流程中',
+            objects: [
+                { reqType:'IR', reqId:'IR-003', reqCode:'IR-2026-003', reqTitle:'折叠屏显示驱动优化',
+                  changeCategory:'修改', changes:[
+                    { field:'归属项目', before:'tOS16.5', after:'tOS17.1' },
+                    { field:'需求等级', before:'A', after:'S' }
+                  ] },
+                { reqType:'SR', reqId:'SR-002', reqCode:'SR-2026-003-01', reqTitle:'折叠屏适配SR',
+                  changeCategory:'修改', changes:[
+                    { field:'计划开发完成时间', before:'2026-10-15', after:'2026-11-01' }
+                  ] }
+            ],
+            reqLevel:'初始需求IR,系统需求SR', changeType:'需求变更,计划变更', changeCategory:'修改',
+            affectFeature:'是', isValuePoint:'是',
+            changeOwner:'王芳', sourceDept:['影像部','研发部'],
+            irFactors:'市场需求调整', srFactors:'排期调整',
+            changeReason:'显示驱动模块需迁移至新平台，IR归属项目变更，SR计划排期同步调整',
+            reviewConclusion:'', reviewLink:'', remark:'涉及多模块协同',
+            applicant:'王芳', applyDate:'2026-09-08', endDate:null,
+            workflow:{ currentStep:1, steps:[
+                { role:'SPP', approver:'王海', status:'通过', comment:'同意迁移方案' },
+                { role:'SE', approver:'刘祥根', status:'待审批', comment:'' },
+                { role:'SPM', approver:'张海军', status:'待审批', comment:'' }
+            ] }
+        },
+        /* 场景4: SR / 需求变更 → SE */
+        {
+            title: '新增多摄协同拍摄SR需求',
+            status:'待申请人确认',
+            objects: [
+                { reqType:'SR', reqId:'SR-005', reqCode:'SR-2026-007-01', reqTitle:'多摄融合算法（新增）',
+                  changeCategory:'新增', changes:[] }
+            ],
+            reqLevel:'系统需求SR', changeType:'需求变更', changeCategory:'新增',
+            affectFeature:'是', isValuePoint:'是',
+            changeOwner:'王芳', sourceDept:['影像部'],
+            irFactors:'', srFactors:'新增SR需求',
+            changeReason:'需要新增多摄协同拍摄的SR需求以支持IR-2026-007',
+            reviewConclusion:'', reviewLink:'', remark:'',
+            applicant:'王芳', applyDate:'2026-09-05', endDate:null,
+            workflow:{ currentStep:0, steps:[
+                { role:'SE', approver:'刘祥根', status:'驳回', comment:'需求描述不够详细，请补充验收标准' }
+            ] }
+        },
+        /* 场景5: IR / 计划变更 → SPM */
+        {
+            title: '充电模块IR开发排期后移',
+            status:'流程中',
+            objects: [
+                { reqType:'IR', reqId:'IR-002', reqCode:'IR-2026-002', reqTitle:'超级闪充快充协议升级',
+                  changeCategory:'修改', changes:[
+                    { field:'计划开发开始时间', before:'2026-09-01', after:'2026-09-15' },
+                    { field:'计划开发完成时间', before:'2026-09-30', after:'2026-10-20' }
+                  ] }
+            ],
+            reqLevel:'初始需求IR', changeType:'计划变更', changeCategory:'修改',
+            affectFeature:'否', isValuePoint:'否',
+            changeOwner:'李华', sourceDept:['研发部','产品部'],
+            irFactors:'排期调整', srFactors:'',
+            changeReason:'开发资源紧张，IR排期需后移两周',
+            reviewConclusion:'', reviewLink:'', remark:'',
+            applicant:'李华', applyDate:'2026-09-12', endDate:null,
+            workflow:{ currentStep:0, steps:[
+                { role:'SPM', approver:'张海军', status:'待审批', comment:'' }
+            ] }
+        }
+    ];
+
+    var added = 0;
+    demos.forEach(function(d) {
+        var id = 'CR-2026-' + String(allData.changes.length + 1).padStart(3, '0');
+        d.id = id;
+        d.code = id;
+        allData.changes.push(d);
+        added++;
+    });
+
+    renderChangeList();
+    saveToStorage();
+    alert('已生成 ' + added + ' 条电子流演示数据，覆盖5种场景：\n' +
+          '1. IR/需求变更 → SPP审批\n' +
+          '2. SR/计划变更 → SPM审批\n' +
+          '3. IR+SR/需求变更+计划变更 → SPP+SE+SPM三级审批\n' +
+          '4. SR/需求变更 → SE审批（含驳回场景）\n' +
+          '5. IR/计划变更 → SPM审批');
+}
+
 /* ========== 变更管理：状态Badge ========== */
 function getChangeStatusBadge(status) {
     var map = { '草稿': 'change-status-draft', '流程中': 'change-status-flow', '变更结束': 'change-status-done', '取消申请': 'change-status-cancel', '待申请人确认': 'change-status-pending-confirm', '已取消': 'change-status-cancelled' };
@@ -2064,18 +2228,23 @@ function getChangeDuration(change) {
 }
 
 /* ========== 变更管理：列表渲染 ========== */
+var selectedChangeIds = new Set();
+
 function renderChangeList() {
     var table = document.getElementById('changeTable');
     if (!table) return;
     var html = '';
     html += '<thead><tr>';
+    html += '<th style="width:36px;"><input type="checkbox" id="changeSelectAll" onclick="toggleAllChanges(this)"></th>';
     html += '<th>变更标题</th><th>需求层级</th><th>变更类型</th><th>变更分类</th>';
     html += '<th>变更需求编码</th><th>变更责任人</th><th>变更状态</th>';
     html += '<th>申请人</th><th>申请日期</th><th>时长</th><th>操作</th>';
     html += '</tr></thead><tbody>';
     allData.changes.forEach(function(c) {
         var codes = c.objects.map(function(o) { return o.reqCode; }).join(', ');
+        var checked = selectedChangeIds.has(c.id) ? ' checked' : '';
         html += '<tr>';
+        html += '<td style="text-align:center;"><input type="checkbox" class="change-row-cb" data-id="' + c.id + '"' + checked + ' onclick="toggleChangeSelect(\'' + c.id + '\', this.checked)"></td>';
         html += '<td><span class="link-title" onclick="openChangeDetail(\'' + c.id + '\')">' + escapeHtml(c.title) + '</span></td>';
         html += '<td>' + escapeHtml(c.reqLevel) + '</td>';
         html += '<td><span class="change-type-badge">' + escapeHtml(c.changeType) + '</span></td>';
@@ -2099,6 +2268,43 @@ function renderChangeList() {
     });
     html += '</tbody>';
     table.innerHTML = html;
+    updateBatchDeleteBtn();
+}
+
+function toggleAllChanges(masterCb) {
+    if (masterCb.checked) {
+        allData.changes.forEach(function(c) { selectedChangeIds.add(c.id); });
+    } else {
+        selectedChangeIds.clear();
+    }
+    renderChangeList();
+}
+
+function toggleChangeSelect(id, checked) {
+    if (checked) selectedChangeIds.add(id);
+    else selectedChangeIds.delete(id);
+    updateBatchDeleteBtn();
+}
+
+function updateBatchDeleteBtn() {
+    var btn = document.getElementById('batchDeleteBtn');
+    if (!btn) return;
+    if (selectedChangeIds.size > 0) {
+        btn.style.display = '';
+        btn.innerHTML = '&#128465; 批量删除(' + selectedChangeIds.size + ')';
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+function deleteSelectedChanges() {
+    if (selectedChangeIds.size === 0) { alert('请先选择需要删除的变更记录'); return; }
+    if (!confirm('确认删除选中的 ' + selectedChangeIds.size + ' 条变更记录？删除后无法恢复。')) return;
+    allData.changes = allData.changes.filter(function(c) { return !selectedChangeIds.has(c.id); });
+    selectedChangeIds.clear();
+    renderChangeList();
+    saveToStorage();
+    alert('已删除选中的变更记录');
 }
 
 /* ========== 变更管理：发起变更 ========== */
@@ -2841,6 +3047,16 @@ function submitChange() {
         }
     }
 
+    // 校验：变更标题含有"迁移"时，变更字段必须有"归属项目"的修改记录
+    if (title.indexOf('迁移') >= 0) {
+        var hasProjectChange = currentChangeObjects.some(function(obj) {
+            return obj.changes.some(function(ch) { return ch.field === '归属项目'; });
+        });
+        if (!hasProjectChange) {
+            alert('变更标题含有"迁移"字样，变更字段中必须有"归属项目"的修改记录'); return;
+        }
+    }
+
     // 确定适配品类（取变更对象中IR的categories）
     var categories = [];
     currentChangeObjects.forEach(function(o) {
@@ -2885,6 +3101,7 @@ function submitChange() {
         currentResubmitChangeId = null;
         closeModal('changeCreateModal');
         renderChangeList();
+        saveToStorage();
         alert('变更已修改并重新提交，审批流程已重启');
         return;
     }
@@ -2908,6 +3125,7 @@ function submitChange() {
     allData.changes.push(change);
     closeModal('changeCreateModal');
     renderChangeList();
+    saveToStorage();
     alert('变更已提交，流程编码：' + newId + '\n审批流程已启动');
 }
 
@@ -3250,24 +3468,6 @@ function renderChangeApprovalBody(change, isDetail) {
     });
     html += '</div></div>';
 
-    // 测试用例（根据电子流流向自动生成）
-    var testCases = generateTestCases(change);
-    html += '<div class="change-detail-section"><div class="change-section-title">测试用例';
-    html += '<span style="font-size:12px;color:var(--c-text-tertiary);font-weight:normal;margin-left:8px;">根据' + change.reqLevel + '+' + change.changeType + '场景自动生成 ' + testCases.length + ' 条用例</span>';
-    html += '</div>';
-    html += '<table class="testcase-table"><thead><tr><th style="width:70px;">用例编号</th><th style="width:80px;">用例分类</th><th>用例标题</th><th>前置条件</th><th>测试步骤</th><th>预期结果</th></tr></thead><tbody>';
-    testCases.forEach(function(tc) {
-        html += '<tr>';
-        html += '<td style="font-weight:600;color:var(--c-primary);">' + escapeHtml(tc.id) + '</td>';
-        html += '<td><span class="badge badge-status-review">' + escapeHtml(tc.category) + '</span></td>';
-        html += '<td style="font-weight:600;">' + escapeHtml(tc.title) + '</td>';
-        html += '<td style="font-size:12px;color:var(--c-text-secondary);">' + escapeHtml(tc.precondition).replace(/\n/g, '<br>') + '</td>';
-        html += '<td style="font-size:12px;color:var(--c-text-secondary);">' + escapeHtml(tc.steps).replace(/\n/g, '<br>') + '</td>';
-        html += '<td style="font-size:12px;color:var(--c-text-secondary);">' + escapeHtml(tc.expected).replace(/\n/g, '<br>') + '</td>';
-        html += '</tr>';
-    });
-    html += '</tbody></table></div>';
-
     // 审批意见区（仅审批模式且当前步骤待审批时显示）
     var currentStep = change.workflow.steps[change.workflow.currentStep];
     if (!isDetail && currentStep && currentStep.status === '待审批') {
@@ -3334,6 +3534,7 @@ function approveChange(action) {
 
     renderChangeList();
     renderChangeApprovalBody(change);
+    saveToStorage();
     alert(action === '通过' || action === '风险通过' ? (change.status === '变更结束' ? '审批通过，流程已结束' : '审批通过，流转到下一节点') : '已驳回，流程已退回给申请人确认');
 }
 
@@ -3379,6 +3580,7 @@ function confirmCancelChange() {
     change.endDate = new Date().toISOString().slice(0, 10);
     renderChangeList();
     closeModal('changeApprovalModal');
+    saveToStorage();
     alert('变更申请已取消');
 }
 
@@ -3418,6 +3620,7 @@ function confirmTransfer() {
     step.approver = name;
     closeModal('transferModal');
     renderChangeApprovalBody(change);
+    saveToStorage();
     alert('已转办给 ' + role + ' - ' + name);
 }
 
