@@ -112,6 +112,11 @@ function initPage() {
     document.getElementById('stat-sr').textContent = allData.sr.length;
     document.getElementById('stat-ar').textContent = allData.ar.length;
     renderBaselineList();
+    /* 如果变更记录为空（如用户手动删除后），重新生成初始样本数据 */
+    if (allData.changes.length === 0) {
+        generateChangeSampleData();
+        saveToStorage();
+    }
     renderChangeList();
 }
 
@@ -2023,9 +2028,9 @@ function generateChangeSampleData() {
             reviewLink: 'https://example.com/review/001', remark: '',
             applicant: '张明', applyDate: '2026-08-20', endDate: '2026-08-25',
             workflow: {
-                currentStep: 0, steps: [
+                currentStep: 2, steps: [
                     { role: 'SPP', approver: '王海', status: '通过', comment: '同意变更，风险可控' },
-                    { role: 'SPM', approver: '张海军', status: '待审批', comment: '' }
+                    { role: 'SPM', approver: '张海军', status: '通过', comment: '同意需求等级调整' }
                 ]
             }
         },
