@@ -112,7 +112,6 @@ function initPage() {
     document.getElementById('stat-sr').textContent = allData.sr.length;
     document.getElementById('stat-ar').textContent = allData.ar.length;
     renderBaselineList();
-    generateChangeSampleData();
     renderChangeList();
 }
 
@@ -2077,7 +2076,7 @@ function generateChangeSampleData() {
     ];
 }
 
-/* 生成测试用例：自动生成多条电子流演示数据（覆盖不同场景） */
+/* 生成测试用例：自动生成9条电子流演示数据（覆盖全部审批路由场景） */
 function generateDemoChanges() {
     var demos = [
         /* 场景1: IR / 需求变更 → SPP */
@@ -2100,7 +2099,69 @@ function generateDemoChanges() {
             applicant:'张明', applyDate:'2026-09-10', endDate:null,
             workflow:{ currentStep:0, steps:[{ role:'SPP', approver:'王海', status:'待审批', comment:'' }] }
         },
-        /* 场景2: SR / 计划变更 → SPM */
+        /* 场景2: IR / 计划变更 → SPM */
+        {
+            title: '充电模块IR开发排期后移',
+            status:'流程中',
+            objects: [
+                { reqType:'IR', reqId:'IR-002', reqCode:'IR-2026-002', reqTitle:'超级闪充快充协议升级',
+                  changeCategory:'修改', changes:[
+                    { field:'计划开发开始时间', before:'2026-09-01', after:'2026-09-15' },
+                    { field:'计划开发完成时间', before:'2026-09-30', after:'2026-10-20' }
+                  ] }
+            ],
+            reqLevel:'初始需求IR', changeType:'计划变更', changeCategory:'修改',
+            affectFeature:'否', isValuePoint:'否',
+            changeOwner:'李华', sourceDept:['研发部','产品部'],
+            irFactors:'排期调整', srFactors:'',
+            changeReason:'开发资源紧张，IR排期需后移两周',
+            reviewConclusion:'', reviewLink:'', remark:'',
+            applicant:'李华', applyDate:'2026-09-12', endDate:null,
+            workflow:{ currentStep:0, steps:[{ role:'SPM', approver:'张海军', status:'待审批', comment:'' }] }
+        },
+        /* 场景3: IR / 需求变更+计划变更 → SPP&SPM */
+        {
+            title: 'AI夜景算法需求等级及排期同步调整',
+            status:'变更结束',
+            objects: [
+                { reqType:'IR', reqId:'IR-001', reqCode:'IR-2026-001', reqTitle:'AI夜景算法优化',
+                  changeCategory:'修改', changes:[
+                    { field:'需求等级', before:'S', after:'A' },
+                    { field:'计划开发完成时间', before:'2026-06-30', after:'2026-07-20' }
+                  ] }
+            ],
+            reqLevel:'初始需求IR', changeType:'需求变更,计划变更', changeCategory:'修改',
+            affectFeature:'否', isValuePoint:'否',
+            changeOwner:'张明', sourceDept:['产品部','研发部'],
+            irFactors:'市场需求调整,排期调整', srFactors:'',
+            changeReason:'AI夜景算法需求等级从S调整为A，同时开发排期后移20天',
+            reviewConclusion:'评审通过', reviewLink:'https://example.com/review/demo3', remark:'',
+            applicant:'张明', applyDate:'2026-08-28', endDate:'2026-09-03',
+            workflow:{ currentStep:2, steps:[
+                { role:'SPP', approver:'王海', status:'通过', comment:'同意需求等级调整' },
+                { role:'SPM', approver:'张海军', status:'通过', comment:'排期调整合理，同意' }
+            ] }
+        },
+        /* 场景4: SR / 需求变更 → SE */
+        {
+            title: '多摄协同拍摄SR需求描述完善',
+            status:'待申请人确认',
+            objects: [
+                { reqType:'SR', reqId:'SR-005', reqCode:'SR-2026-007-01', reqTitle:'多摄融合算法（新增）',
+                  changeCategory:'新增', changes:[] }
+            ],
+            reqLevel:'系统需求SR', changeType:'需求变更', changeCategory:'新增',
+            affectFeature:'是', isValuePoint:'是',
+            changeOwner:'王芳', sourceDept:['影像部'],
+            irFactors:'', srFactors:'新增SR需求',
+            changeReason:'需要新增多摄协同拍摄的SR需求以支持IR-2026-007',
+            reviewConclusion:'', reviewLink:'', remark:'',
+            applicant:'王芳', applyDate:'2026-09-05', endDate:null,
+            workflow:{ currentStep:0, steps:[
+                { role:'SE', approver:'刘祥根', status:'驳回', comment:'需求描述不够详细，请补充验收标准' }
+            ] }
+        },
+        /* 场景5: SR / 计划变更 → SPM */
         {
             title: '快充协议SR计划排期变更',
             status:'变更结束',
@@ -2115,11 +2176,87 @@ function generateDemoChanges() {
             changeOwner:'李华', sourceDept:['研发部'],
             irFactors:'', srFactors:'排期调整',
             changeReason:'供应商芯片交付延迟，SR开发排期需后移',
-            reviewConclusion:'评审通过', reviewLink:'https://example.com/review/demo2', remark:'',
+            reviewConclusion:'评审通过', reviewLink:'https://example.com/review/demo5', remark:'',
             applicant:'李华', applyDate:'2026-09-01', endDate:'2026-09-05',
             workflow:{ currentStep:1, steps:[{ role:'SPM', approver:'张海军', status:'通过', comment:'同意调整' }] }
         },
-        /* 场景3: IR+SR / 需求变更+计划变更 → SPP+SE+SPM */
+        /* 场景6: SR / 需求变更+计划变更 → SE&SPM */
+        {
+            title: '蓝牙音频SR需求等级及排期变更',
+            status:'流程中',
+            objects: [
+                { reqType:'SR', reqId:'SR-003', reqCode:'SR-2026-003-01', reqTitle:'蓝牙5.3音频协议适配',
+                  changeCategory:'修改', changes:[
+                    { field:'需求等级', before:'B', after:'A' },
+                    { field:'计划开发完成时间', before:'2026-08-30', after:'2026-09-20' }
+                  ] }
+            ],
+            reqLevel:'系统需求SR', changeType:'需求变更,计划变更', changeCategory:'修改',
+            affectFeature:'否', isValuePoint:'否',
+            changeOwner:'陈明', sourceDept:['研发部'],
+            irFactors:'', srFactors:'市场需求调整,排期调整',
+            changeReason:'蓝牙音频SR需求等级从B提升至A，排期同步后移',
+            reviewConclusion:'评审通过', reviewLink:'https://example.com/review/demo6', remark:'',
+            applicant:'陈明', applyDate:'2026-09-08', endDate:null,
+            workflow:{ currentStep:1, steps:[
+                { role:'SE', approver:'刘祥根', status:'通过', comment:'同意需求等级提升' },
+                { role:'SPM', approver:'张海军', status:'待审批', comment:'' }
+            ] }
+        },
+        /* 场景7: IR+SR / 需求变更 → SPP+SE */
+        {
+            title: '隐私安全模块需求变更',
+            status:'流程中',
+            objects: [
+                { reqType:'IR', reqId:'IR-005', reqCode:'IR-2026-006', reqTitle:'隐私数据安全合规',
+                  changeCategory:'修改', changes:[
+                    { field:'需求等级', before:'A', after:'S' },
+                    { field:'需求描述', before:'基础隐私保护', after:'增强型隐私安全合规方案' }
+                  ] },
+                { reqType:'SR', reqId:'SR-006', reqCode:'SR-2026-008-01', reqTitle:'安全沙箱SR',
+                  changeCategory:'修改', changes:[
+                    { field:'需求描述', before:'基础沙箱隔离', after:'增强型安全沙箱方案' }
+                  ] }
+            ],
+            reqLevel:'初始需求IR,系统需求SR', changeType:'需求变更', changeCategory:'修改',
+            affectFeature:'是', isValuePoint:'否',
+            changeOwner:'刘洋', sourceDept:['安全部','研发部'],
+            irFactors:'合规要求', srFactors:'合规要求',
+            changeReason:'根据最新法规要求，隐私安全模块需求等级提升至S级，IR和SR同步变更',
+            reviewConclusion:'评审通过', reviewLink:'https://example.com/review/demo7', remark:'涉及合规要求',
+            applicant:'刘洋', applyDate:'2026-09-11', endDate:null,
+            workflow:{ currentStep:1, steps:[
+                { role:'SPP', approver:'王海', status:'通过', comment:'合规要求紧急，同意变更' },
+                { role:'SE', approver:'刘祥根', status:'待审批', comment:'' }
+            ] }
+        },
+        /* 场景8: IR+SR / 计划变更 → SPM */
+        {
+            title: '系统流畅度IR与SR排期同步调整',
+            status:'流程中',
+            objects: [
+                { reqType:'IR', reqId:'IR-006', reqCode:'IR-2026-008', reqTitle:'系统流畅度全面提升',
+                  changeCategory:'修改', changes:[
+                    { field:'计划开发开始时间', before:'2026-09-10', after:'2026-09-25' },
+                    { field:'计划开发完成时间', before:'2026-11-30', after:'2026-12-15' }
+                  ] },
+                { reqType:'SR', reqId:'SR-007', reqCode:'SR-2026-009-01', reqTitle:'动画框架优化SR',
+                  changeCategory:'修改', changes:[
+                    { field:'计划开发完成时间', before:'2026-10-30', after:'2026-11-15' }
+                  ] }
+            ],
+            reqLevel:'初始需求IR,系统需求SR', changeType:'计划变更', changeCategory:'修改',
+            affectFeature:'否', isValuePoint:'否',
+            changeOwner:'陈明', sourceDept:['研发部'],
+            irFactors:'排期调整', srFactors:'排期调整',
+            changeReason:'系统流畅度优化涉及IR和SR两个层级，排期需同步后移',
+            reviewConclusion:'', reviewLink:'', remark:'',
+            applicant:'陈明', applyDate:'2026-09-13', endDate:null,
+            workflow:{ currentStep:0, steps:[
+                { role:'SPM', approver:'张海军', status:'待审批', comment:'' }
+            ] }
+        },
+        /* 场景9: IR+SR / 需求变更+计划变更 → SPP+SE+SPM */
         {
             title: '显示驱动模块迁移及排期调整',
             status:'流程中',
@@ -2146,53 +2283,20 @@ function generateDemoChanges() {
                 { role:'SE', approver:'刘祥根', status:'待审批', comment:'' },
                 { role:'SPM', approver:'张海军', status:'待审批', comment:'' }
             ] }
-        },
-        /* 场景4: SR / 需求变更 → SE */
-        {
-            title: '新增多摄协同拍摄SR需求',
-            status:'待申请人确认',
-            objects: [
-                { reqType:'SR', reqId:'SR-005', reqCode:'SR-2026-007-01', reqTitle:'多摄融合算法（新增）',
-                  changeCategory:'新增', changes:[] }
-            ],
-            reqLevel:'系统需求SR', changeType:'需求变更', changeCategory:'新增',
-            affectFeature:'是', isValuePoint:'是',
-            changeOwner:'王芳', sourceDept:['影像部'],
-            irFactors:'', srFactors:'新增SR需求',
-            changeReason:'需要新增多摄协同拍摄的SR需求以支持IR-2026-007',
-            reviewConclusion:'', reviewLink:'', remark:'',
-            applicant:'王芳', applyDate:'2026-09-05', endDate:null,
-            workflow:{ currentStep:0, steps:[
-                { role:'SE', approver:'刘祥根', status:'驳回', comment:'需求描述不够详细，请补充验收标准' }
-            ] }
-        },
-        /* 场景5: IR / 计划变更 → SPM */
-        {
-            title: '充电模块IR开发排期后移',
-            status:'流程中',
-            objects: [
-                { reqType:'IR', reqId:'IR-002', reqCode:'IR-2026-002', reqTitle:'超级闪充快充协议升级',
-                  changeCategory:'修改', changes:[
-                    { field:'计划开发开始时间', before:'2026-09-01', after:'2026-09-15' },
-                    { field:'计划开发完成时间', before:'2026-09-30', after:'2026-10-20' }
-                  ] }
-            ],
-            reqLevel:'初始需求IR', changeType:'计划变更', changeCategory:'修改',
-            affectFeature:'否', isValuePoint:'否',
-            changeOwner:'李华', sourceDept:['研发部','产品部'],
-            irFactors:'排期调整', srFactors:'',
-            changeReason:'开发资源紧张，IR排期需后移两周',
-            reviewConclusion:'', reviewLink:'', remark:'',
-            applicant:'李华', applyDate:'2026-09-12', endDate:null,
-            workflow:{ currentStep:0, steps:[
-                { role:'SPM', approver:'张海军', status:'待审批', comment:'' }
-            ] }
         }
     ];
 
+    /* 检查是否已生成过演示数据，避免重复添加 */
+    var existingDemo = allData.changes.some(function(c) { return c.id && c.id.indexOf('CR-DEMO') === 0; });
+    if (existingDemo) {
+        alert('测试用例已生成，请勿重复点击。如需重新生成，请先删除已有的测试用例数据。');
+        return;
+    }
+
     var added = 0;
     demos.forEach(function(d) {
-        var id = 'CR-2026-' + String(allData.changes.length + 1).padStart(3, '0');
+        var seq = allData.changes.length + 1;
+        var id = 'CR-DEMO-' + String(seq).padStart(3, '0');
         d.id = id;
         d.code = id;
         allData.changes.push(d);
@@ -2201,12 +2305,16 @@ function generateDemoChanges() {
 
     renderChangeList();
     saveToStorage();
-    alert('已生成 ' + added + ' 条电子流演示数据，覆盖5种场景：\n' +
+    alert('已生成 ' + added + ' 条电子流演示数据，覆盖9种审批路由场景：\n' +
           '1. IR/需求变更 → SPP审批\n' +
-          '2. SR/计划变更 → SPM审批\n' +
-          '3. IR+SR/需求变更+计划变更 → SPP+SE+SPM三级审批\n' +
+          '2. IR/计划变更 → SPM审批\n' +
+          '3. IR/需求变更+计划变更 → SPP&SPM审批\n' +
           '4. SR/需求变更 → SE审批（含驳回场景）\n' +
-          '5. IR/计划变更 → SPM审批');
+          '5. SR/计划变更 → SPM审批\n' +
+          '6. SR/需求变更+计划变更 → SE&SPM审批\n' +
+          '7. IR+SR/需求变更 → SPP+SE审批\n' +
+          '8. IR+SR/计划变更 → SPM审批\n' +
+          '9. IR+SR/需求变更+计划变更 → SPP+SE+SPM三级审批');
 }
 
 /* ========== 变更管理：状态Badge ========== */
@@ -2235,7 +2343,10 @@ function renderChangeList() {
     if (!table) return;
     var html = '';
     html += '<thead><tr>';
-    html += '<th style="width:36px;"><input type="checkbox" id="changeSelectAll" onclick="toggleAllChanges(this)"></th>';
+    /* 全选复选框根据当前选中状态设置checked属性 */
+    var allChecked = (allData.changes.length > 0 && selectedChangeIds.size === allData.changes.length);
+    var masterChecked = allChecked ? ' checked' : '';
+    html += '<th style="width:36px;"><input type="checkbox" id="changeSelectAll"' + masterChecked + ' onclick="toggleAllChanges(this)"></th>';
     html += '<th>变更标题</th><th>需求层级</th><th>变更类型</th><th>变更分类</th>';
     html += '<th>变更需求编码</th><th>变更责任人</th><th>变更状态</th>';
     html += '<th>申请人</th><th>申请日期</th><th>时长</th><th>操作</th>';
@@ -2272,17 +2383,27 @@ function renderChangeList() {
 }
 
 function toggleAllChanges(masterCb) {
-    if (masterCb.checked) {
+    var checked = masterCb.checked;
+    /* 直接更新所有行复选框，不重建表格，避免主复选框状态丢失 */
+    var rowCbs = document.querySelectorAll('.change-row-cb');
+    if (checked) {
         allData.changes.forEach(function(c) { selectedChangeIds.add(c.id); });
     } else {
         selectedChangeIds.clear();
     }
-    renderChangeList();
+    rowCbs.forEach(function(cb) { cb.checked = checked; });
+    updateBatchDeleteBtn();
 }
 
 function toggleChangeSelect(id, checked) {
     if (checked) selectedChangeIds.add(id);
     else selectedChangeIds.delete(id);
+    /* 同步更新全选复选框状态 */
+    var masterCb = document.getElementById('changeSelectAll');
+    if (masterCb) {
+        var allChecked = (allData.changes.length > 0 && selectedChangeIds.size === allData.changes.length);
+        masterCb.checked = allChecked;
+    }
     updateBatchDeleteBtn();
 }
 
