@@ -9,6 +9,7 @@ var currentLockSelection = null; // 'demand' or 'demand-plan'
 var currentBaselineType = null;
 var currentBaselineSelection = null;
 var isEditing = false;
+var currentChangeTab = 'req'; // 'req' or 'feature' - 变更对象Tab页
 
 /* ========== 下拉选项配置 ========== */
 var dropdownOptions = {
@@ -2104,6 +2105,7 @@ function renderChangeList() {
 function openChangeCreate() {
     currentChangeObjects = [];
     currentResubmitChangeId = null;
+    currentChangeTab = 'req';
     renderChangeCreateForm();
     document.getElementById('changeCreateModal').classList.add('show');
 }
@@ -2133,21 +2135,46 @@ function renderChangeCreateForm() {
     html += '<div class="change-info-value auto">系统自动生成</div></div>';
     html += '</div></div>';
 
-    // 2. 变更对象板块
+    // 2. 变更对象板块（带Tab页）
     html += '<div class="change-section">';
-    html += '<div class="change-section-title">变更对象<span style="font-size:11px;color:#f59e0b;margin-left:8px;font-weight:normal;">若需新增SR需先新增或选取IR后才可再新增SR</span>';
-    html += '<div>';
-    html += '<button class="change-action-btn" onclick="addNewIR()">新增IR</button>';
-    html += '<button class="change-action-btn primary" onclick="openReqSelect()">选取</button>';
-    html += '</div></div>';
+    html += '<div class="change-section-title">变更对象</div>';
 
-    if (currentChangeObjects.length === 0) {
-        html += '<div class="empty-state">暂无变更对象，请点击上方按钮选取或新增</div>';
+    // Tab栏
+    html += '<div class="change-tab-bar">';
+    html += '<div class="change-tab' + (currentChangeTab === 'req' ? ' active' : '') + '" onclick="switchChangeTab(\'req\')">需求</div>';
+    html += '<div class="change-tab' + (currentChangeTab === 'feature' ? ' active' : '') + '" onclick="switchChangeTab(\'feature\')">特性</div>';
+    html += '</div>';
+
+    // 按钮区
+    html += '<div style="margin-bottom:8px;">';
+    if (currentChangeTab === 'req') {
+        html += '<button class="change-action-btn" onclick="addNewIR()">新增IR</button>';
+        html += '<button class="change-action-btn primary" onclick="openReqSelect()">选取</button>';
+    } else {
+        html += '<button class="change-action-btn" onclick="addNewChangeObject(\'特性\')">新增特性</button>';
+        html += '<button class="change-action-btn primary" onclick="openFeatureSelect()">选取</button>';
+    }
+    html += '</div>';
+
+    // 过滤当前Tab的对象
+    var tabObjects = [];
+    currentChangeObjects.forEach(function(obj, i) {
+        var isReqObj = (obj.reqType === 'IR' || obj.reqType === 'SR');
+        var isFeatureObj = (obj.reqType === '特性');
+        if ((currentChangeTab === 'req' && isReqObj) || (currentChangeTab === 'feature' && isFeatureObj)) {
+            tabObjects.push({obj: obj, index: i});
+        }
+    });
+
+    if (tabObjects.length === 0) {
+        html += '<div class="empty-state">暂无' + (currentChangeTab === 'req' ? '需求' : '特性') + '变更对象，请点击上方按钮选取或新增</div>';
     } else {
         html += '<table class="change-objects-table">';
         html += '<thead><tr><th>变更分类</th><th>需求标题</th><th>需求编码</th><th>操作</th></tr></thead>';
         html += '<tbody>';
-        currentChangeObjects.forEach(function(obj, i) {
+        tabObjects.forEach(function(item) {
+            var obj = item.obj;
+            var i = item.index;
             var hasChanges = obj.changes.length > 0;
             // 对象摘要行
             html += '<tr class="change-object-row' + (hasChanges ? '' : ' collapsed') + '" id="changeObjRow' + i + '">';
@@ -2312,6 +2339,19 @@ function refreshChangeFactors() {
     if (srField) srField.style.display = (hasSR && !hasIR) ? '' : 'none';
 }
 
+/* ========== 变更管理：Tab切换 ========== */
+function switchChangeTab(tab) {
+    currentChangeTab = tab;
+    renderChangeCreateForm();
+    refreshAggFields();
+}
+
+/* ========== 变更管理：特性选择 ========== */
+function openFeatureSelect() {
+    document.getElementById('featureSelectBody').innerHTML = '<div class="empty-state">暂无可选特性，请通过"新增特性"按钮添加</div>';
+    document.getElementById('featureSelectModal').classList.add('show');
+}
+
 /* ========== 变更管理：需求选择 ========== */
 function openReqSelect() {
     document.getElementById('reqSelectTitle').textContent = '选取需求（IR及IR层级下SR）';
@@ -2328,7 +2368,7 @@ function openReqSelect() {
                 html += '<div class="req-select-ir-block" style="margin-bottom:8px;">';
                 html += '<table class="req-select-table"><tbody>';
                 html += '<tr style="cursor:pointer;" onclick="toggleReqCheckbox(this)">';
-                html += '<td style="width:40px;text-align:center;"><input type="checkbox" class="req-select-cb" data-type="IR" data-id="' + escapeHtml(ir.id) + '"></td>';
+                html += '<td style="width:40px;text-align:center;"><input type="checkbox" class="req-select-cb" data-type="IR" data-id="' + escapeHtml(ir.id) + '" onclick="event.stopPropagation()"></td>';
                 html += '<td style="width:70px;font-weight:600;color:#3b82f6;">IR</td>';
                 html += '<td style="width:130px;">' + escapeHtml(ir.code) + '</td>';
                 html += '<td>' + escapeHtml(ir.title) + '</td>';
@@ -2345,7 +2385,7 @@ function openReqSelect() {
                         var srAlreadySel = currentChangeObjects.some(function(o) { return o.reqId === sr.id; });
                         if (srAlreadySel) return;
                         html += '<tr style="cursor:pointer;" onclick="toggleReqCheckbox(this)">';
-                        html += '<td style="width:40px;text-align:center;"><input type="checkbox" class="req-select-cb" data-type="SR" data-id="' + escapeHtml(sr.id) + '"></td>';
+                        html += '<td style="width:40px;text-align:center;"><input type="checkbox" class="req-select-cb" data-type="SR" data-id="' + escapeHtml(sr.id) + '" onclick="event.stopPropagation()"></td>';
                         html += '<td style="width:70px;color:#7c3aed;">SR</td>';
                         html += '<td style="width:130px;">' + escapeHtml(sr.code) + '</td>';
                         html += '<td>' + escapeHtml(sr.title) + '</td>';
@@ -2369,7 +2409,7 @@ function openReqSelect() {
                     html += '<table class="req-select-table"><tbody>';
                     unselectedSRs.forEach(function(sr) {
                         html += '<tr style="cursor:pointer;" onclick="toggleReqCheckbox(this)">';
-                        html += '<td style="width:40px;text-align:center;"><input type="checkbox" class="req-select-cb" data-type="SR" data-id="' + escapeHtml(sr.id) + '"></td>';
+                        html += '<td style="width:40px;text-align:center;"><input type="checkbox" class="req-select-cb" data-type="SR" data-id="' + escapeHtml(sr.id) + '" onclick="event.stopPropagation()"></td>';
                         html += '<td style="width:70px;color:#7c3aed;">SR</td>';
                         html += '<td style="width:130px;">' + escapeHtml(sr.code) + '</td>';
                         html += '<td>' + escapeHtml(sr.title) + '</td>';
