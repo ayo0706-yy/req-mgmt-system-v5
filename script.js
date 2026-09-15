@@ -3221,6 +3221,17 @@ function submitChange() {
     var changeType = autoAggChangeType();
     var changeCategory = autoAggChangeCategory();
 
+    /* 校验：需求层级、变更类型不能为空，变更分类不能为NA */
+    if (reqLevel === '-' || reqLevel === '') {
+        alert('需求层级为空，不允许提交变更'); return;
+    }
+    if (changeType === '-' || changeType === '') {
+        alert('变更类型为空，不允许提交变更'); return;
+    }
+    if (changeCategory === 'NA' || changeCategory === '') {
+        alert('变更分类为NA，不允许提交变更'); return;
+    }
+
     var today = new Date().toISOString().slice(0, 10);
 
     /* 驳回后修改重提：更新已有变更记录，重置审批流程 */
