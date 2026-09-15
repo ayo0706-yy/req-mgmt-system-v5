@@ -2043,8 +2043,8 @@ var srEditableFields = {
 };
 
 var approverConfig = {
-    '手机': { SPP: '王海', SE: '刘祥根', SPM: '张海军' },
-    '平板': { SPP: '沈茂伟', SE: '王力博', SPM: '肖龙启' }
+    '手机': { SPP: '王海', SE: '刘祥根', '项目组': '张海军' },
+    '平板': { SPP: '沈茂伟', SE: '王力博', '项目组': '肖龙启' }
 };
 
 /* ========== 特性可编辑字段 ========== */
@@ -2087,7 +2087,7 @@ function generateChangeSampleData() {
             workflow: {
                 currentStep: 2, steps: [
                     { role: 'SPP', approver: '王海', status: '通过', comment: '同意变更，风险可控' },
-                    { role: 'SPM', approver: '张海军', status: '通过', comment: '同意需求等级调整' }
+                    { role: '项目组', approver: '张海军', status: '通过', comment: '同意需求等级调整' }
                 ]
             }
         },
@@ -2111,7 +2111,7 @@ function generateChangeSampleData() {
             applicant: '李华', applyDate: '2026-09-01', endDate: null,
             workflow: {
                 currentStep: 0, steps: [
-                    { role: 'SPM', approver: '张海军', status: '待审批', comment: '' }
+                    { role: '项目组', approver: '张海军', status: '待审批', comment: '' }
                 ]
             }
         },
@@ -2133,7 +2133,7 @@ function generateChangeSampleData() {
             workflow: {
                 currentStep: 0, steps: [
                     { role: 'SE', approver: '刘祥根', status: '待审批', comment: '' },
-                    { role: 'SPM', approver: '张海军', status: '待审批', comment: '' }
+                    { role: '项目组', approver: '张海军', status: '待审批', comment: '' }
                 ]
             }
         }
@@ -2163,10 +2163,10 @@ function generateDemoChanges() {
             applicant:'张明', applyDate:'2026-09-10', endDate:null,
             workflow:{ currentStep:0, steps:[
                 { role:'SPP', approver:'王海', status:'待审批', comment:'' },
-                { role:'SPM', approver:'张海军', status:'待审批', comment:'' }
+                { role:'项目组', approver:'张海军', status:'待审批', comment:'' }
             ] }
         },
-        /* 场景2: IR / 计划变更 → SPM */
+        /* 场景2: IR / 计划变更 → 项目组 */
         {
             title: '充电模块IR开发排期后移',
             status:'流程中',
@@ -2184,9 +2184,9 @@ function generateDemoChanges() {
             changeReason:'开发资源紧张，IR排期需后移两周',
             reviewConclusion:'', reviewLink:'', remark:'',
             applicant:'李华', applyDate:'2026-09-12', endDate:null,
-            workflow:{ currentStep:0, steps:[{ role:'SPM', approver:'张海军', status:'待审批', comment:'' }] }
+            workflow:{ currentStep:0, steps:[{ role:'项目组', approver:'张海军', status:'待审批', comment:'' }] }
         },
-        /* 场景3: IR / 需求变更+计划变更 → SPP&SPM */
+        /* 场景3: IR / 需求变更+计划变更 → SPP&项目组 */
         {
             title: 'AI夜景算法需求等级及排期同步调整',
             status:'变更结束',
@@ -2206,7 +2206,7 @@ function generateDemoChanges() {
             applicant:'张明', applyDate:'2026-08-28', endDate:'2026-09-03',
             workflow:{ currentStep:2, steps:[
                 { role:'SPP', approver:'王海', status:'通过', comment:'同意需求等级调整' },
-                { role:'SPM', approver:'张海军', status:'通过', comment:'排期调整合理，同意' }
+                { role:'项目组', approver:'张海军', status:'通过', comment:'排期调整合理，同意' }
             ] }
         },
         /* 场景4: SR / 需求变更 → SE */
@@ -2226,10 +2226,10 @@ function generateDemoChanges() {
             applicant:'王芳', applyDate:'2026-09-05', endDate:null,
             workflow:{ currentStep:0, steps:[
                 { role:'SE', approver:'刘祥根', status:'驳回', comment:'需求描述不够详细，请补充验收标准' },
-                { role:'SPM', approver:'张海军', status:'待审批', comment:'' }
+                { role:'项目组', approver:'张海军', status:'待审批', comment:'' }
             ] }
         },
-        /* 场景5: SR / 计划变更 → SPM */
+        /* 场景5: SR / 计划变更 → 项目组 */
         {
             title: '快充协议SR计划排期变更',
             status:'变更结束',
@@ -2246,9 +2246,9 @@ function generateDemoChanges() {
             changeReason:'供应商芯片交付延迟，SR开发排期需后移',
             reviewConclusion:'评审通过', reviewLink:'https://example.com/review/demo5', remark:'',
             applicant:'李华', applyDate:'2026-09-01', endDate:'2026-09-05',
-            workflow:{ currentStep:1, steps:[{ role:'SPM', approver:'张海军', status:'通过', comment:'同意调整' }] }
+            workflow:{ currentStep:1, steps:[{ role:'项目组', approver:'张海军', status:'通过', comment:'同意调整' }] }
         },
-        /* 场景6: SR / 需求变更+计划变更 → SE&SPM */
+        /* 场景6: SR / 需求变更+计划变更 → SE&项目组 */
         {
             title: '蓝牙音频SR需求等级及排期变更',
             status:'流程中',
@@ -2268,7 +2268,7 @@ function generateDemoChanges() {
             applicant:'陈明', applyDate:'2026-09-08', endDate:null,
             workflow:{ currentStep:1, steps:[
                 { role:'SE', approver:'刘祥根', status:'通过', comment:'同意需求等级提升' },
-                { role:'SPM', approver:'张海军', status:'待审批', comment:'' }
+                { role:'项目组', approver:'张海军', status:'待审批', comment:'' }
             ] }
         },
         /* 场景7: IR+SR / 需求变更 → SPP+SE */
@@ -2296,10 +2296,10 @@ function generateDemoChanges() {
             workflow:{ currentStep:1, steps:[
                 { role:'SPP', approver:'王海', status:'通过', comment:'合规要求紧急，同意变更' },
                 { role:'SE', approver:'刘祥根', status:'待审批', comment:'' },
-                { role:'SPM', approver:'张海军', status:'待审批', comment:'' }
+                { role:'项目组', approver:'张海军', status:'待审批', comment:'' }
             ] }
         },
-        /* 场景8: IR+SR / 计划变更 → SPM */
+        /* 场景8: IR+SR / 计划变更 → 项目组 */
         {
             title: '系统流畅度IR与SR排期同步调整',
             status:'流程中',
@@ -2322,10 +2322,10 @@ function generateDemoChanges() {
             reviewConclusion:'', reviewLink:'', remark:'',
             applicant:'陈明', applyDate:'2026-09-13', endDate:null,
             workflow:{ currentStep:0, steps:[
-                { role:'SPM', approver:'张海军', status:'待审批', comment:'' }
+                { role:'项目组', approver:'张海军', status:'待审批', comment:'' }
             ] }
         },
-        /* 场景9: IR+SR / 需求变更+计划变更 → SPP+SE+SPM */
+        /* 场景9: IR+SR / 需求变更+计划变更 → SPP+SE+项目组 */
         {
             title: '显示驱动模块迁移及排期调整',
             status:'流程中',
@@ -2350,7 +2350,7 @@ function generateDemoChanges() {
             workflow:{ currentStep:1, steps:[
                 { role:'SPP', approver:'王海', status:'通过', comment:'同意迁移方案' },
                 { role:'SE', approver:'刘祥根', status:'待审批', comment:'' },
-                { role:'SPM', approver:'张海军', status:'待审批', comment:'' }
+                { role:'项目组', approver:'张海军', status:'待审批', comment:'' }
             ] }
         }
     ];
@@ -2374,16 +2374,16 @@ function generateDemoChanges() {
 
     renderChangeList();
     saveToStorage();
-    alert('已生成 ' + added + ' 条电子流演示数据，覆盖9种审批路由场景（均以SPM为最终审批人）：\n' +
-          '1. IR/需求变更 → SPP→SPM审批\n' +
-          '2. IR/计划变更 → SPM审批\n' +
-          '3. IR/需求变更+计划变更 → SPP→SPM审批\n' +
-          '4. SR/新增(需求变更+计划变更) → SE→SPM审批（含驳回场景）\n' +
-          '5. SR/计划变更 → SPM审批\n' +
-          '6. SR/需求变更+计划变更 → SE→SPM审批\n' +
-          '7. IR+SR/需求变更 → SPP→SE→SPM审批\n' +
-          '8. IR+SR/计划变更 → SPM审批\n' +
-          '9. IR+SR/需求变更+计划变更 → SPP→SE→SPM三级审批');
+    alert('已生成 ' + added + ' 条电子流演示数据，覆盖9种审批路由场景（均以项目组为最终审批人）：\n' +
+          '1. IR/需求变更 → SPP→项目组审批\n' +
+          '2. IR/计划变更 → 项目组审批\n' +
+          '3. IR/需求变更+计划变更 → SPP→项目组审批\n' +
+          '4. SR/新增(需求变更+计划变更) → SE→项目组审批（含驳回场景）\n' +
+          '5. SR/计划变更 → 项目组审批\n' +
+          '6. SR/需求变更+计划变更 → SE→项目组审批\n' +
+          '7. IR+SR/需求变更 → SPP→SE→项目组审批\n' +
+          '8. IR+SR/计划变更 → 项目组审批\n' +
+          '9. IR+SR/需求变更+计划变更 → SPP→SE→项目组三级审批');
 }
 
 /* ========== 变更管理：状态Badge ========== */
@@ -3878,29 +3878,29 @@ function determineWorkflow(changeObject, changeType, categories) {
     if (hasIR && hasSR) {
         // IR + SR
         if (hasDemand && hasPlan) {
-            roles = ['SPP', 'SE', 'SPM'];
+            roles = ['SPP', 'SE', '项目组'];
         } else if (hasDemand) {
             roles = ['SPP', 'SE'];
         } else { // hasPlan
-            roles = ['SPM'];
+            roles = ['项目组'];
         }
     } else if (hasIR) {
         // IR only
         if (hasDemand && hasPlan) {
-            roles = ['SPP', 'SPM'];
+            roles = ['SPP', '项目组'];
         } else if (hasDemand) {
             roles = ['SPP'];
         } else { // hasPlan
-            roles = ['SPM'];
+            roles = ['项目组'];
         }
     } else if (hasSR) {
         // SR only
         if (hasDemand && hasPlan) {
-            roles = ['SE', 'SPM'];
+            roles = ['SE', '项目组'];
         } else if (hasDemand) {
             roles = ['SE'];
         } else { // hasPlan
-            roles = ['SPM'];
+            roles = ['项目组'];
         }
     } else if (hasFeature) {
         // 特性 only
@@ -3909,18 +3909,18 @@ function determineWorkflow(changeObject, changeType, categories) {
 
     // 如果有特性变更，确保SE在审批链中
     if (hasFeatureChange && roles.indexOf('SE') < 0) {
-        // 在SPM之前插入SE
-        var spmIdx = roles.indexOf('SPM');
-        if (spmIdx >= 0) {
-            roles.splice(spmIdx, 0, 'SE');
+        // 在项目组之前插入SE
+        var projGrpIdx = roles.indexOf('项目组');
+        if (projGrpIdx >= 0) {
+            roles.splice(projGrpIdx, 0, 'SE');
         } else {
             roles.push('SE');
         }
     }
 
-    // 确保最后一个审批人为SPM
-    if (roles.length === 0 || roles[roles.length - 1] !== 'SPM') {
-        roles.push('SPM');
+    // 确保最后一个审批人为项目组
+    if (roles.length === 0 || roles[roles.length - 1] !== '项目组') {
+        roles.push('项目组');
     }
 
     var steps = roles.map(function(role) {
@@ -3962,10 +3962,10 @@ function generateTestCases(change) {
             cases.push({
                 id: 'TC-' + String(tcId++).padStart(3, '0'),
                 category: '场景路由',
-                title: 'IR+SR / 需求变更+计划变更 → SPP+SE+SPM',
+                title: 'IR+SR / 需求变更+计划变更 → SPP+SE+项目组',
                 precondition: '变更对象：IR+SR\n变更类型：需求变更+计划变更',
-                steps: '1.提交包含IR和SR的变更\n2.验证需求基本信息和计划排期均有变更\n3.验证审批流程包含SPP、SE、SPM三个节点',
-                expected: '路由到SPP → SE → SPM三级审批'
+                steps: '1.提交包含IR和SR的变更\n2.验证需求基本信息和计划排期均有变更\n3.验证审批流程包含SPP、SE、项目组三个节点',
+                expected: '路由到SPP → SE → 项目组三级审批'
             });
         } else if (hasDemand) {
             cases.push({
@@ -3980,10 +3980,10 @@ function generateTestCases(change) {
             cases.push({
                 id: 'TC-' + String(tcId++).padStart(3, '0'),
                 category: '场景路由',
-                title: 'IR+SR / 计划变更 → SPM',
+                title: 'IR+SR / 计划变更 → 项目组',
                 precondition: '变更对象：IR+SR\n变更类型：计划变更',
-                steps: '1.提交包含IR和SR的变更\n2.验证仅计划排期有变更\n3.验证审批流程仅包含SPM节点',
-                expected: '路由到SPM单级审批'
+                steps: '1.提交包含IR和SR的变更\n2.验证仅计划排期有变更\n3.验证审批流程仅包含项目组节点',
+                expected: '路由到项目组单级审批'
             });
         }
     } else if (hasIR) {
@@ -3991,10 +3991,10 @@ function generateTestCases(change) {
             cases.push({
                 id: 'TC-' + String(tcId++).padStart(3, '0'),
                 category: '场景路由',
-                title: 'IR / 需求变更+计划变更 → SPP+SPM',
+                title: 'IR / 需求变更+计划变更 → SPP+项目组',
                 precondition: '变更对象：IR\n变更类型：需求变更+计划变更',
-                steps: '1.提交仅含IR的变更\n2.验证审批流程包含SPP、SPM两个节点',
-                expected: '路由到SPP → SPM两级审批'
+                steps: '1.提交仅含IR的变更\n2.验证审批流程包含SPP、项目组两个节点',
+                expected: '路由到SPP → 项目组两级审批'
             });
         } else if (hasDemand) {
             cases.push({
@@ -4009,10 +4009,10 @@ function generateTestCases(change) {
             cases.push({
                 id: 'TC-' + String(tcId++).padStart(3, '0'),
                 category: '场景路由',
-                title: 'IR / 计划变更 → SPM',
+                title: 'IR / 计划变更 → 项目组',
                 precondition: '变更对象：IR\n变更类型：计划变更',
-                steps: '1.提交仅含IR的计划变更\n2.验证审批流程仅包含SPM节点',
-                expected: '路由到SPM单级审批'
+                steps: '1.提交仅含IR的计划变更\n2.验证审批流程仅包含项目组节点',
+                expected: '路由到项目组单级审批'
             });
         }
     } else if (hasSR) {
@@ -4020,10 +4020,10 @@ function generateTestCases(change) {
             cases.push({
                 id: 'TC-' + String(tcId++).padStart(3, '0'),
                 category: '场景路由',
-                title: 'SR / 需求变更+计划变更 → SE+SPM',
+                title: 'SR / 需求变更+计划变更 → SE+项目组',
                 precondition: '变更对象：SR\n变更类型：需求变更+计划变更',
-                steps: '1.提交仅含SR的变更\n2.验证审批流程包含SE、SPM两个节点',
-                expected: '路由到SE → SPM两级审批'
+                steps: '1.提交仅含SR的变更\n2.验证审批流程包含SE、项目组两个节点',
+                expected: '路由到SE → 项目组两级审批'
             });
         } else if (hasDemand) {
             cases.push({
@@ -4038,10 +4038,10 @@ function generateTestCases(change) {
             cases.push({
                 id: 'TC-' + String(tcId++).padStart(3, '0'),
                 category: '场景路由',
-                title: 'SR / 计划变更 → SPM',
+                title: 'SR / 计划变更 → 项目组',
                 precondition: '变更对象：SR\n变更类型：计划变更',
-                steps: '1.提交仅含SR的计划变更\n2.验证审批流程仅包含SPM节点',
-                expected: '路由到SPM单级审批'
+                steps: '1.提交仅含SR的计划变更\n2.验证审批流程仅包含项目组节点',
+                expected: '路由到项目组单级审批'
             });
         }
     }
