@@ -1,5 +1,5 @@
 /* ========== 全局数据 ========== */
-var allData = { ir: [], sr: [], ar: [], baselines: [], changes: [] };
+var allData = { ir: [], sr: [], ar: [], features: [], baselines: [], changes: [] };
 var expandedRows = {};
 var selectedItems = { ir: new Set(), sr: new Set() };
 var currentDrawer = null; // 'ir' or 'sr'
@@ -91,6 +91,7 @@ function loadFromStorage() {
         if (parsed && parsed.ir && parsed.sr && parsed.changes) {
             allData = parsed;
             if (!allData.ar) allData.ar = [];
+            if (!allData.features) allData.features = [];
             if (!allData.baselines) allData.baselines = [];
             return true;
         }
@@ -102,6 +103,7 @@ function initPage() {
     var loaded = loadFromStorage();
     if (!loaded) {
         generateSampleData();
+        generateFeatureSampleData();
         generateChangeSampleData();
         saveToStorage();
     }
@@ -115,6 +117,11 @@ function initPage() {
     /* 如果变更记录为空（如用户手动删除后），重新生成初始样本数据 */
     if (allData.changes.length === 0) {
         generateChangeSampleData();
+        saveToStorage();
+    }
+    /* 如果特性数据为空，重新生成L2级样本数据 */
+    if (!allData.features || allData.features.length === 0) {
+        generateFeatureSampleData();
         saveToStorage();
     }
     renderChangeList();
@@ -135,7 +142,7 @@ function generateSampleData() {
             status:'开发中', brands:['Infinix','TECNO'], versions:['Full','Slim'],
             diffType:'无差异', markets:'东南亚,中东,非洲', productLine:'X系列,S系列',
             owner:'张明', se:'李华', workload:120, devWork:60, testWork:40, designWork:10, productWork:10,
-            feature:'影像-夜景优化', tags:'AI,影像,夜景',
+            feature:'影像-夜景优化', tags:'AI,影像,夜景,tOS价值点',
             analysis:'需调研竞品夜拍方案，分析Google Night Sight、华为夜景模式等竞品的技术路径，确定差异化优化方向。重点关注暗光场景下的人脸保护和色彩还原准确性。',
             decision:'S级需求，优先排期。评审通过，纳入tOS17.1核心影像能力。',
             planReview:'通过', techReview:'通过', uedReview:'通过', bizLock:'事业部A锁定',
@@ -284,7 +291,7 @@ function generateSampleData() {
             sysLevel:'系统级', priority:'P0', owner:'王强', devRep:'刘总监', uxRep:'陈静', testRep:'周涛', handler:'王强',
             workload:60, devWork:40, testWork:10, designWork:5, productWork:5,
             domain:'影像', dept2:'影像算法部', dept3:'算法开发组', devOwner:'王强',
-            field:'影像算法', fieldOwner:'王强', project:'tOS17.1', tags:'AI,降噪,ISP',
+            field:'影像算法', fieldOwner:'王强', project:'tOS17.1', tags:'AI,降噪,ISP,tOS价值点',
             versions:['Full','Slim'], platform:'骁龙8Gen3', diffType:'无差异', brands:['Infinix','TECNO'],
             markets:'东南亚,中东,非洲', productLine:'X系列,S系列',
             selfCheckResult:'自检通过，降噪效果满足预期指标',
@@ -513,6 +520,36 @@ function generateSampleData() {
         if (!sr.categories) sr.categories = ['手机','平板'];
     });
     allData.baselines = [];
+}
+
+/* ========== 生成特性示例数据（L2级预置） ========== */
+function generateFeatureSampleData() {
+    allData.features = [
+        { id:'FT-L2-001', code:'FT-L2-001', name:'AI影像子系统', level:'L2', parentName:'', parentCode:'',
+          category:'功能特性', evolutionStrategy:'迭代优化', owner:'张明', status:'已发布',
+          desc:'AI影像核心能力子系统，包含夜景、人像、长焦等AI能力', tags:'AI,影像' },
+        { id:'FT-L2-002', code:'FT-L2-002', name:'快充电源管理子系统', level:'L2', parentName:'', parentCode:'',
+          category:'功能特性', evolutionStrategy:'架构升级', owner:'赵强', status:'已发布',
+          desc:'充电与电源管理核心能力，支持多协议快充和智能功耗管理', tags:'快充,电源' },
+        { id:'FT-L2-003', code:'FT-L2-003', name:'折叠屏结构子系统', level:'L2', parentName:'', parentCode:'',
+          category:'可靠性特性', evolutionStrategy:'迭代优化', owner:'周伟', status:'开发中',
+          desc:'折叠屏铰链与屏幕结构可靠性能力，含寿命优化和防尘防水', tags:'折叠,结构' },
+        { id:'FT-L2-004', code:'FT-L2-004', name:'AI语音交互子系统', level:'L2', parentName:'', parentCode:'',
+          category:'功能特性', evolutionStrategy:'新建', owner:'张明', status:'开发中',
+          desc:'AI语音助手多语言交互能力，含语音识别、NLP和语音合成', tags:'AI,语音' },
+        { id:'FT-L2-005', code:'FT-L2-005', name:'显示渲染子系统', level:'L2', parentName:'', parentCode:'',
+          category:'性能特性', evolutionStrategy:'迭代优化', owner:'孙磊', status:'已发布',
+          desc:'屏幕显示与渲染核心能力，含高刷新率、HDR和色彩管理', tags:'显示,渲染' },
+        { id:'FT-L2-006', code:'FT-L2-006', name:'安全子系统', level:'L2', parentName:'', parentCode:'',
+          category:'安全特性', evolutionStrategy:'架构升级', owner:'陈刚', status:'已发布',
+          desc:'系统安全核心能力，含应用沙箱、数据加密和权限管理', tags:'安全,加密' },
+        { id:'FT-L2-007', code:'FT-L2-007', name:'系统性能子系统', level:'L2', parentName:'', parentCode:'',
+          category:'性能特性', evolutionStrategy:'迭代优化', owner:'赵磊', status:'开发中',
+          desc:'系统流畅度与性能调度能力，含动画优化、内存管理和进程调度', tags:'系统,性能' },
+        { id:'FT-L2-008', code:'FT-L2-008', name:'通信连接子系统', level:'L2', parentName:'', parentCode:'',
+          category:'功能特性', evolutionStrategy:'迭代优化', owner:'王海', status:'已发布',
+          desc:'网络通信与连接核心能力，含5G、WiFi、蓝牙和NFC', tags:'通信,连接' }
+    ];
 }
 
 /* ========== 渲染侧边栏 ========== */
@@ -1987,26 +2024,46 @@ var currentResubmitChangeId = null; // 当前重新提交的变更ID（驳回后
 
 var changeFieldOptions = {
     '基本信息': ['状态', '需求来源', '需求分类', '价值主张', '需求等级', '需求差异类型', '适用品牌', '适用产品线', '适用市场', '适用版本', '适配品类', '事业部锁定', '标题', '描述', '责任人', '系统工程师',
-                 '系统级需求', '优先级', '开发代表', 'UX代表', '测试代表', '处理人', '归属领域', '开发部门二级', '开发部门三级', '开发责任人', '责任田', '责任田主', '归属项目'],
+                 '系统级需求', '优先级', '开发代表', 'UX代表', '测试代表', '处理人', '标签', '归属领域', '开发部门二级', '开发部门三级', '开发责任人', '责任田', '责任田主', '归属项目',
+                 '特性名称', '特性编码', '父级特性', '特性分类', '演进策略', '特性Owner'],
     '计划排期': ['计划需求评审完成时间', '实际需求评审完成时间', '计划技术评审完成时间', '实际技术评审完成时间', '计划开发开始时间', '实际开发开始时间', '计划开发完成时间', '实际开发完成时间',
                  '计划验收完成时间', '实际验收完成时间']
 };
 
 /* IR可编辑字段（编辑弹窗用） */
 var irEditableFields = {
-    '基本信息': ['状态', '需求来源', '需求分类', '价值主张', '需求等级', '需求差异类型', '适用品牌', '适用产品线', '适用市场', '适用版本', '适配品类', '事业部锁定', '标题', '描述', '责任人', '系统工程师'],
+    '基本信息': ['状态', '需求来源', '需求分类', '价值主张', '需求等级', '需求差异类型', '适用品牌', '适用产品线', '适用市场', '适用版本', '适配品类', '事业部锁定', '标题', '描述', '责任人', '系统工程师', '标签', '归属领域', '归属项目'],
     '计划排期': ['计划需求评审完成时间', '实际需求评审完成时间', '计划技术评审完成时间', '实际技术评审完成时间', '计划开发开始时间', '实际开发开始时间', '计划开发完成时间', '实际开发完成时间']
 };
 
 /* SR可编辑字段（编辑弹窗用） */
 var srEditableFields = {
-    '基本信息': ['状态', '需求来源', '需求分类', '价值主张', '需求差异类型', '适用品牌', '适用产品线', '适用市场', '适用版本', '适配品类', '标题', '描述', '系统级需求', '优先级', '责任人', '开发代表', 'UX代表', '测试代表', '处理人', '归属领域', '开发部门二级', '开发部门三级', '开发责任人', '责任田', '责任田主', '归属项目'],
+    '基本信息': ['状态', '需求来源', '需求分类', '价值主张', '需求差异类型', '适用品牌', '适用产品线', '适用市场', '适用版本', '适配品类', '标题', '描述', '系统级需求', '优先级', '责任人', '开发代表', 'UX代表', '测试代表', '处理人', '标签', '归属领域', '开发部门二级', '开发部门三级', '开发责任人', '责任田', '责任田主', '归属项目'],
     '计划排期': ['计划验收完成时间', '实际验收完成时间']
 };
 
 var approverConfig = {
     '手机': { SPP: '王海', SE: '刘祥根', SPM: '张海军' },
     '平板': { SPP: '沈茂伟', SE: '王力博', SPM: '肖龙启' }
+};
+
+/* ========== 特性可编辑字段 ========== */
+var featureEditableFields = {
+    '基本信息': ['特性名称', '特性编码', '父级特性', '特性分类', '演进策略', '特性Owner', '状态', '描述', '标签']
+};
+
+/* 特性字段标签→属性名映射 */
+var featureLabelToProp = {
+    '特性名称':'name','特性编码':'code','父级特性':'parentName','特性分类':'category',
+    '演进策略':'evolutionStrategy','特性Owner':'owner','状态':'status','描述':'desc','标签':'tags',
+    '层级':'level'
+};
+
+/* 特性下拉选项 */
+var featureDropdownOptions = {
+    '特性分类': ['功能特性', '性能特性', '体验特性', '可靠性特性', '安全特性'],
+    '演进策略': ['新建', '迭代优化', '架构升级', '废弃替代'],
+    '状态': ['规划中', '开发中', '已验收', '已发布', '已废弃']
 };
 
 /* ========== 变更管理：示例数据 ========== */
@@ -2020,7 +2077,7 @@ function generateChangeSampleData() {
                   changeCategory: '修改',
                   changes: [{ field: '需求等级', before: 'S', after: 'A' }] }
             ],
-            reqLevel: '初始需求IR', changeType: '需求变更', changeCategory: '修改',
+            changeObject: '初始需求IR', reqLevel: '初始需求IR', changeType: '需求变更', changeCategory: '修改',
             affectFeature: '否', isValuePoint: '否',
             changeOwner: '张明', sourceDept: ['产品部'],
             irFactors: '市场需求调整', srFactors: '',
@@ -2045,7 +2102,7 @@ function generateChangeSampleData() {
                   changeCategory: '修改',
                   changes: [{ field: '计划开发完成时间', before: '2026-09-10', after: '2026-09-25' }] }
             ],
-            reqLevel: '初始需求IR,系统需求SR', changeType: '计划变更', changeCategory: '修改',
+            changeObject: '初始需求IR,系统需求SR', reqLevel: '初始需求IR,系统需求SR', changeType: '计划变更', changeCategory: '修改',
             affectFeature: '否', isValuePoint: '否',
             changeOwner: '李华', sourceDept: ['研发部', '产品部'],
             irFactors: '', srFactors: '排期调整',
@@ -2066,7 +2123,7 @@ function generateChangeSampleData() {
                   changeCategory: '新增',
                   changes: [] }
             ],
-            reqLevel: '系统需求SR', changeType: '需求变更,计划变更', changeCategory: '新增',
+            changeObject: '系统需求SR', reqLevel: '系统需求SR', changeType: '需求变更,计划变更', changeCategory: '新增',
             affectFeature: '是', isValuePoint: '是',
             changeOwner: '王芳', sourceDept: ['影像部'],
             irFactors: '', srFactors: '新增SR需求',
@@ -2097,7 +2154,7 @@ function generateDemoChanges() {
                     { field:'需求等级', before:'S', after:'A' }
                   ] }
             ],
-            reqLevel:'初始需求IR', changeType:'需求变更', changeCategory:'修改',
+            changeObject:'初始需求IR', reqLevel:'初始需求IR', changeType:'需求变更', changeCategory:'修改',
             affectFeature:'否', isValuePoint:'否',
             changeOwner:'张明', sourceDept:['产品部'],
             irFactors:'市场需求调整', srFactors:'',
@@ -2120,7 +2177,7 @@ function generateDemoChanges() {
                     { field:'计划开发完成时间', before:'2026-09-30', after:'2026-10-20' }
                   ] }
             ],
-            reqLevel:'初始需求IR', changeType:'计划变更', changeCategory:'修改',
+            changeObject:'初始需求IR', reqLevel:'初始需求IR', changeType:'计划变更', changeCategory:'修改',
             affectFeature:'否', isValuePoint:'否',
             changeOwner:'李华', sourceDept:['研发部','产品部'],
             irFactors:'排期调整', srFactors:'',
@@ -2140,7 +2197,7 @@ function generateDemoChanges() {
                     { field:'计划开发完成时间', before:'2026-06-30', after:'2026-07-20' }
                   ] }
             ],
-            reqLevel:'初始需求IR', changeType:'需求变更,计划变更', changeCategory:'修改',
+            changeObject:'初始需求IR', reqLevel:'初始需求IR', changeType:'需求变更,计划变更', changeCategory:'修改',
             affectFeature:'否', isValuePoint:'否',
             changeOwner:'张明', sourceDept:['产品部','研发部'],
             irFactors:'市场需求调整,排期调整', srFactors:'',
@@ -2160,7 +2217,7 @@ function generateDemoChanges() {
                 { reqType:'SR', reqId:'SR-005', reqCode:'SR-2026-007-01', reqTitle:'多摄融合算法（新增）',
                   changeCategory:'新增', changes:[] }
             ],
-            reqLevel:'系统需求SR', changeType:'需求变更,计划变更', changeCategory:'新增',
+            changeObject:'系统需求SR', reqLevel:'系统需求SR', changeType:'需求变更,计划变更', changeCategory:'新增',
             affectFeature:'是', isValuePoint:'是',
             changeOwner:'王芳', sourceDept:['影像部'],
             irFactors:'', srFactors:'新增SR需求',
@@ -2182,7 +2239,7 @@ function generateDemoChanges() {
                     { field:'计划开发完成时间', before:'2026-09-10', after:'2026-09-25' }
                   ] }
             ],
-            reqLevel:'系统需求SR', changeType:'计划变更', changeCategory:'修改',
+            changeObject:'系统需求SR', reqLevel:'系统需求SR', changeType:'计划变更', changeCategory:'修改',
             affectFeature:'否', isValuePoint:'否',
             changeOwner:'李华', sourceDept:['研发部'],
             irFactors:'', srFactors:'排期调整',
@@ -2202,7 +2259,7 @@ function generateDemoChanges() {
                     { field:'计划开发完成时间', before:'2026-08-30', after:'2026-09-20' }
                   ] }
             ],
-            reqLevel:'系统需求SR', changeType:'需求变更,计划变更', changeCategory:'修改',
+            changeObject:'系统需求SR', reqLevel:'系统需求SR', changeType:'需求变更,计划变更', changeCategory:'修改',
             affectFeature:'否', isValuePoint:'否',
             changeOwner:'陈明', sourceDept:['研发部'],
             irFactors:'', srFactors:'市场需求调整,排期调整',
@@ -2229,7 +2286,7 @@ function generateDemoChanges() {
                     { field:'需求描述', before:'基础沙箱隔离', after:'增强型安全沙箱方案' }
                   ] }
             ],
-            reqLevel:'初始需求IR,系统需求SR', changeType:'需求变更', changeCategory:'修改',
+            changeObject:'初始需求IR,系统需求SR', reqLevel:'初始需求IR,系统需求SR', changeType:'需求变更', changeCategory:'修改',
             affectFeature:'是', isValuePoint:'否',
             changeOwner:'刘洋', sourceDept:['安全部','研发部'],
             irFactors:'合规要求', srFactors:'合规要求',
@@ -2257,7 +2314,7 @@ function generateDemoChanges() {
                     { field:'计划开发完成时间', before:'2026-10-30', after:'2026-11-15' }
                   ] }
             ],
-            reqLevel:'初始需求IR,系统需求SR', changeType:'计划变更', changeCategory:'修改',
+            changeObject:'初始需求IR,系统需求SR', reqLevel:'初始需求IR,系统需求SR', changeType:'计划变更', changeCategory:'修改',
             affectFeature:'否', isValuePoint:'否',
             changeOwner:'陈明', sourceDept:['研发部'],
             irFactors:'排期调整', srFactors:'排期调整',
@@ -2283,7 +2340,7 @@ function generateDemoChanges() {
                     { field:'计划开发完成时间', before:'2026-10-15', after:'2026-11-01' }
                   ] }
             ],
-            reqLevel:'初始需求IR,系统需求SR', changeType:'需求变更,计划变更', changeCategory:'修改',
+            changeObject:'初始需求IR,系统需求SR', reqLevel:'初始需求IR,系统需求SR', changeType:'需求变更,计划变更', changeCategory:'修改',
             affectFeature:'是', isValuePoint:'是',
             changeOwner:'王芳', sourceDept:['影像部','研发部'],
             irFactors:'市场需求调整', srFactors:'排期调整',
@@ -2359,7 +2416,7 @@ function renderChangeList() {
     var allChecked = (allData.changes.length > 0 && selectedChangeIds.size === allData.changes.length);
     var masterChecked = allChecked ? ' checked' : '';
     html += '<th style="width:36px;"><input type="checkbox" id="changeSelectAll"' + masterChecked + ' onclick="toggleAllChanges(this)"></th>';
-    html += '<th>变更标题</th><th>需求层级</th><th>变更类型</th><th>变更分类</th>';
+    html += '<th>变更标题</th><th>变更对象</th><th>变更类型</th><th>变更分类</th>';
     html += '<th>变更需求编码</th><th>变更责任人</th><th>变更状态</th>';
     html += '<th>申请人</th><th>申请日期</th><th>时长</th><th>操作</th>';
     html += '</tr></thead><tbody>';
@@ -2369,7 +2426,7 @@ function renderChangeList() {
         html += '<tr>';
         html += '<td style="text-align:center;"><input type="checkbox" class="change-row-cb" data-id="' + c.id + '"' + checked + ' onclick="toggleChangeSelect(\'' + c.id + '\', this.checked)"></td>';
         html += '<td><span class="link-title" onclick="openChangeDetail(\'' + c.id + '\')">' + escapeHtml(c.title) + '</span></td>';
-        html += '<td>' + escapeHtml(c.reqLevel) + '</td>';
+        html += '<td>' + escapeHtml(c.changeObject || c.reqLevel) + '</td>';
         html += '<td><span class="change-type-badge">' + escapeHtml(c.changeType) + '</span></td>';
         html += '<td>' + escapeHtml(c.changeCategory) + '</td>';
         html += '<td>' + escapeHtml(codes) + '</td>';
@@ -2454,7 +2511,7 @@ function renderChangeCreateForm() {
 
     /* 保存已有表单值，防止重新渲染时丢失 */
     var fv = {};
-    ['changeTitle','changeAffectFeature','changeIsValuePoint','changeOwner',
+    ['changeTitle','changeAffectFeature','changeOwner',
      'changeSourceDept','changeReason','changeReviewConclusion',
      'changeReviewLink','changeRemark','changeIrFactors','changeSrFactors'
     ].forEach(function(id) {
@@ -2473,9 +2530,9 @@ function renderChangeCreateForm() {
     html += '<div class="change-info-value auto">系统自动生成</div></div>';
     html += '</div></div>';
 
-    // 2. 变更对象板块（带Tab页）
+    // 2. 变更对象板块（带Tab页和提示词）
     html += '<div class="change-section">';
-    html += '<div class="change-section-title">变更对象</div>';
+    html += '<div class="change-section-title">变更对象<span style="font-size:11px;color:#64748b;font-weight:normal;margin-left:12px;">提示：1.由于SR必须存在于某IR之下，故若需新增SR需绑定父级IR；2.特性仅可新增/修改L3/L4级特性，若需新增L3级特性需先选取L2级特性后才可新增L3级特性，L4级同理</span></div>';
 
     // Tab栏
     html += '<div class="change-tab-bar">';
@@ -2487,9 +2544,11 @@ function renderChangeCreateForm() {
     html += '<div style="margin-bottom:8px;">';
     if (currentChangeTab === 'req') {
         html += '<button class="change-action-btn" onclick="addNewIR()">新增IR</button>';
+        html += '<button class="change-action-btn" onclick="addNewSR()">新增SR</button>';
         html += '<button class="change-action-btn primary" onclick="openReqSelect()">选取</button>';
     } else {
-        html += '<button class="change-action-btn" onclick="addNewChangeObject(\'特性\')">新增特性</button>';
+        html += '<button class="change-action-btn" onclick="addNewFeatureL3()">新增L3</button>';
+        html += '<button class="change-action-btn" onclick="addNewFeatureL4()">新增L4</button>';
         html += '<button class="change-action-btn primary" onclick="openFeatureSelect()">选取</button>';
     }
     html += '</div>';
@@ -2507,50 +2566,87 @@ function renderChangeCreateForm() {
     if (tabObjects.length === 0) {
         html += '<div class="empty-state">暂无' + (currentChangeTab === 'req' ? '需求' : '特性') + '变更对象，请点击上方按钮选取或新增</div>';
     } else {
+        var isReqTab = (currentChangeTab === 'req');
+        var colCount = isReqTab ? 7 : 8;
         html += '<table class="change-objects-table">';
-        html += '<thead><tr><th>变更分类</th><th>需求标题</th><th>需求编码</th><th>操作</th></tr></thead>';
+        if (isReqTab) {
+            html += '<thead><tr><th>变更分类</th><th>需求标题</th><th>需求编码</th><th>父级IR</th><th>责任人</th><th>领域</th><th>操作</th></tr></thead>';
+        } else {
+            html += '<thead><tr><th>变更分类</th><th>特性名称</th><th>特性编码</th><th>父级特性</th><th>特性分类</th><th>演进策略</th><th>特性Owner</th><th>操作</th></tr></thead>';
+        }
         html += '<tbody>';
         tabObjects.forEach(function(item) {
             var obj = item.obj;
             var i = item.index;
-            var hasChanges = obj.changes.length > 0;
-            // 对象摘要行
+            var hasChanges = obj.changes && obj.changes.length > 0;
+            /* 获取需求数据用于显示列 */
+            var srcData = null;
+            if (obj.reqType === 'IR') srcData = allData.ir.find(function(d) { return d.id === obj.reqId; });
+            else if (obj.reqType === 'SR') srcData = allData.sr.find(function(d) { return d.id === obj.reqId; });
+            else if (obj.reqType === '特性') srcData = allData.features.find(function(d) { return d.id === obj.reqId; });
+            var td = obj.tempData || {};
+            /* 对象摘要行 */
             html += '<tr class="change-object-row' + (hasChanges ? '' : ' collapsed') + '" id="changeObjRow' + i + '"' + (hasChanges ? ' onclick="toggleChangeObjRow(' + i + ')"' : '') + '>';
+            /* 变更分类 */
             html += '<td onclick="event.stopPropagation()">';
             if (obj.changeCategory === '新增') {
                 html += '<select class="change-field-select" disabled><option value="新增" selected>新增</option></select>';
             } else {
                 html += '<select class="change-field-select" onchange="updateChangeObj(' + i + ',\'changeCategory\',this.value)">';
-                /* IR变更分类增加NA选项，SR不增加 */
-                var catOptions = (obj.reqType === 'IR') ? ['删除', '修改', 'NA'] : ['删除', '修改'];
+                var catOptions = isReqTab ? ['删除', '修改', '迁移'] : ['删除', '修改'];
                 catOptions.forEach(function(cat) {
                     html += '<option value="' + cat + '"' + (obj.changeCategory === cat ? ' selected' : '') + '>' + cat + '</option>';
                 });
                 html += '</select>';
             }
             html += '</td>';
+            /* 标题/名称 */
             html += '<td>' + escapeHtml(obj.reqTitle || '(待填写)') + '</td>';
+            /* 编码 */
             html += '<td>' + escapeHtml(obj.reqCode || '(待生成)') + '</td>';
-            html += '<td onclick="event.stopPropagation()">';
-            if (obj.reqType === 'IR') {
-                html += '<button class="change-action-btn primary" onclick="event.stopPropagation();addNewChangeObject(\'SR\',' + i + ')">新增SR</button>';
+            if (isReqTab) {
+                /* 父级IR */
+                var parentIRCode = '';
+                if (obj.reqType === 'SR') {
+                    if (obj.parentIRCode) parentIRCode = obj.parentIRCode;
+                    else if (td.parentId) { var pir = allData.ir.find(function(d) { return d.id === td.parentId; }); if (pir) parentIRCode = pir.code; }
+                    else if (srcData && srcData.parentId) { var pir2 = allData.ir.find(function(d) { return d.id === srcData.parentId; }); if (pir2) parentIRCode = pir2.code; }
+                }
+                html += '<td>' + escapeHtml(parentIRCode) + '</td>';
+                /* 责任人 */
+                var owner = td.owner || (srcData ? srcData.owner : '') || '';
+                html += '<td>' + escapeHtml(owner) + '</td>';
+                /* 领域 */
+                var domain = td.domain || (srcData ? srcData.domain : '') || '';
+                html += '<td>' + escapeHtml(domain) + '</td>';
+            } else {
+                /* 父级特性 */
+                var parentFeat = obj.parentName || td.parentName || (srcData ? srcData.parentName : '') || '';
+                html += '<td>' + escapeHtml(parentFeat) + '</td>';
+                /* 特性分类 */
+                var featCat = td.category || (srcData ? srcData.category : '') || '';
+                html += '<td>' + escapeHtml(featCat) + '</td>';
+                /* 演进策略 */
+                var evoStrat = td.evolutionStrategy || (srcData ? srcData.evolutionStrategy : '') || '';
+                html += '<td>' + escapeHtml(evoStrat) + '</td>';
+                /* 特性Owner */
+                var featOwner = td.owner || (srcData ? srcData.owner : '') || '';
+                html += '<td>' + escapeHtml(featOwner) + '</td>';
             }
+            /* 操作列 */
+            html += '<td onclick="event.stopPropagation()">';
             html += '<button class="change-action-btn" onclick="event.stopPropagation();editChangeObject(' + i + ')">编辑</button>';
             html += '<button class="change-action-btn danger" onclick="event.stopPropagation();removeChangeObject(' + i + ')">移除</button>';
-            html += '</td>';
-            html += '<td colspan="3">';
             if (hasChanges) {
-                html += '<span class="expand-indicator">&#9660;</span>';
-                html += '<span style="font-size:11px;color:#64748b;">' + obj.changes.length + '项变更</span>';
-            } else {
-                html += '<span style="font-size:11px;color:#94a3b8;">无变更字段</span>';
+                html += ' <span class="expand-indicator">&#9660;</span>';
+                html += '<span style="font-size:11px;color:#64748b;">' + obj.changes.length + '项</span>';
             }
             html += '</td>';
             html += '</tr>';
 
-            // 变更字段明细行
+            /* 变更字段明细行 */
             if (hasChanges) {
-                html += '<tr class="change-detail-rows" id="changeDetailRows' + i + '"><td colspan="7" style="padding:8px 16px;background:#f8fafc;">';
+                html += '<tr class="change-detail-rows" id="changeDetailRows' + i + '"><td colspan="' + colCount + '" style="padding:8px 16px;background:#f8fafc;">';
                 html += '<table style="width:100%;font-size:11px;border-collapse:collapse;">';
                 html += '<thead><tr><th style="text-align:left;padding:4px;">变更字段</th><th style="text-align:left;padding:4px;">变更前</th><th style="text-align:left;padding:4px;">变更后</th><th style="width:60px;">操作</th></tr></thead><tbody>';
                 obj.changes.forEach(function(ch, j) {
@@ -2573,8 +2669,8 @@ function renderChangeCreateForm() {
     html += '<div class="change-section">';
     html += '<div class="change-section-title">变更信息</div>';
     html += '<div class="change-info-grid full-row">';
-    // 需求层级（自动）
-    html += '<div class="change-info-field"><div class="change-info-label">需求层级</div><div class="change-info-value auto" id="aggReqLevel">' + autoAggReqLevel() + '</div></div>';
+    // 变更对象（自动读取变更对象板块）
+    html += '<div class="change-info-field"><div class="change-info-label">变更对象</div><div class="change-info-value auto" id="aggChangeObject">' + autoAggChangeObject() + '</div></div>';
     // 变更类型（自动）
     html += '<div class="change-info-field"><div class="change-info-label">变更类型</div><div class="change-info-value auto" id="aggChangeType">' + autoAggChangeType() + '</div></div>';
     // 变更分类（自动）
@@ -2582,9 +2678,8 @@ function renderChangeCreateForm() {
     // 是否影响特性
     html += '<div class="change-info-field"><div class="change-info-label">是否影响特性 <span class="required">*</span></div>';
     html += '<div class="change-info-value"><select id="changeAffectFeature"><option value="">请选择</option><option value="是"' + (fv.changeAffectFeature === '是' ? ' selected' : '') + '>是</option><option value="否"' + (fv.changeAffectFeature === '否' ? ' selected' : '') + '>否</option></select></div></div>';
-    // 是否价值点
-    html += '<div class="change-info-field"><div class="change-info-label">是否价值点 <span class="required">*</span></div>';
-    html += '<div class="change-info-value"><select id="changeIsValuePoint"><option value="">请选择</option><option value="是"' + (fv.changeIsValuePoint === '是' ? ' selected' : '') + '>是</option><option value="否"' + (fv.changeIsValuePoint === '否' ? ' selected' : '') + '>否</option></select></div></div>';
+    // 是否价值点（自动判定）
+    html += '<div class="change-info-field"><div class="change-info-label">是否价值点</div><div class="change-info-value auto" id="aggIsValuePoint">' + autoAggIsValuePoint() + '</div></div>';
     // 变更责任人
     html += '<div class="change-info-field"><div class="change-info-label">变更责任人 <span class="required">*</span></div>';
     html += '<div class="change-info-value"><input type="text" id="changeOwner" placeholder="请输入" value="' + escapeHtml(fv.changeOwner || '') + '"></div></div>';
@@ -2624,35 +2719,46 @@ function renderChangeCreateForm() {
 }
 
 /* ========== 变更管理：自动聚合 ========== */
-function autoAggReqLevel() {
-    var hasIR = false, hasSR = false;
+function autoAggChangeObject() {
+    var hasIR = false, hasSR = false, hasFeature = false;
     currentChangeObjects.forEach(function(o) {
         if (o.reqType === 'IR') hasIR = true;
         if (o.reqType === 'SR') hasSR = true;
+        if (o.reqType === '特性') hasFeature = true;
     });
     var result = [];
     if (hasIR) result.push('初始需求IR');
     if (hasSR) result.push('系统需求SR');
+    if (hasFeature) result.push('特性');
     return result.join(',') || '-';
 }
 
 function autoAggChangeType() {
-    var hasBasic = false, hasSchedule = false;
+    /* 判断是否所有变更分类都为"新增" */
+    var allNew = currentChangeObjects.length > 0 && currentChangeObjects.every(function(o) { return o.changeCategory === '新增'; });
+    if (allNew) return '需求变更,计划变更';
+
+    var hasBasic = false, hasSchedule = false, hasFeature = false;
     currentChangeObjects.forEach(function(o) {
-        // 变更分类为"新增"且未涉及任何变更字段时，视为同时涉及需求变更和计划变更
+        if (o.reqType === '特性') { hasFeature = true; return; }
         if (o.changeCategory === '新增' && (!o.changes || o.changes.length === 0)) {
-            hasBasic = true;
-            hasSchedule = true;
-            return;
+            hasBasic = true; hasSchedule = true; return;
         }
-        o.changes.forEach(function(ch) {
-            if (changeFieldOptions['基本信息'].indexOf(ch.field) >= 0) hasBasic = true;
-            if (changeFieldOptions['计划排期'].indexOf(ch.field) >= 0) hasSchedule = true;
-        });
+        if (o.changes) {
+            o.changes.forEach(function(ch) {
+                if (changeFieldOptions['基本信息'].indexOf(ch.field) >= 0) hasBasic = true;
+                if (changeFieldOptions['计划排期'].indexOf(ch.field) >= 0) hasSchedule = true;
+            });
+        }
     });
+    /* 检查特性tab页是否有对象 */
+    var hasFeatureObj = currentChangeObjects.some(function(o) { return o.reqType === '特性'; });
+    if (hasFeatureObj) hasFeature = true;
+
     var result = [];
     if (hasBasic) result.push('需求变更');
     if (hasSchedule) result.push('计划变更');
+    if (hasFeature) result.push('特性变更');
     return result.join(',') || '-';
 }
 
@@ -2664,21 +2770,42 @@ function autoAggChangeCategory() {
     return cats.join('/') || '-';
 }
 
+function autoAggIsValuePoint() {
+    /* 读取IR/SR的标签字段，若包含"tOS价值点"则为"是"，否则为"否" */
+    var hasValuePoint = false;
+    currentChangeObjects.forEach(function(o) {
+        if (o.reqType === 'IR' || o.reqType === 'SR') {
+            var tags = '';
+            if (o.tempData && o.tempData.tags) tags = o.tempData.tags;
+            else {
+                var srcData = null;
+                if (o.reqType === 'IR') srcData = allData.ir.find(function(d) { return d.id === o.reqId; });
+                else srcData = allData.sr.find(function(d) { return d.id === o.reqId; });
+                if (srcData && srcData.tags) tags = srcData.tags;
+            }
+            if (tags && tags.indexOf('tOS价值点') >= 0) hasValuePoint = true;
+        }
+    });
+    return hasValuePoint ? '是' : '否';
+}
+
 function refreshAggFields() {
-    var el1 = document.getElementById('aggReqLevel');
+    var el1 = document.getElementById('aggChangeObject');
     var el2 = document.getElementById('aggChangeType');
     var el3 = document.getElementById('aggChangeCategory');
-    if (el1) el1.textContent = autoAggReqLevel();
+    var el4 = document.getElementById('aggIsValuePoint');
+    if (el1) el1.textContent = autoAggChangeObject();
     if (el2) el2.textContent = autoAggChangeType();
     if (el3) el3.textContent = autoAggChangeCategory();
+    if (el4) el4.textContent = autoAggIsValuePoint();
     refreshChangeFactors();
 }
 
-/* 根据需求层级动态显示/隐藏IR/SR变更因素 */
+/* 根据变更对象动态显示/隐藏IR/SR变更因素 */
 function refreshChangeFactors() {
-    var reqLevel = autoAggReqLevel();
-    var hasIR = reqLevel.indexOf('初始需求IR') >= 0;
-    var hasSR = reqLevel.indexOf('系统需求SR') >= 0;
+    var changeObj = autoAggChangeObject();
+    var hasIR = changeObj.indexOf('初始需求IR') >= 0;
+    var hasSR = changeObj.indexOf('系统需求SR') >= 0;
     var irField = document.getElementById('irFactorsField');
     var srField = document.getElementById('srFactorsField');
     if (irField) irField.style.display = hasIR ? '' : 'none';
@@ -2694,8 +2821,105 @@ function switchChangeTab(tab) {
 
 /* ========== 变更管理：特性选择 ========== */
 function openFeatureSelect() {
-    document.getElementById('featureSelectBody').innerHTML = '<div class="empty-state">暂无可选特性，请通过"新增特性"按钮添加</div>';
+    document.getElementById('featureSelectModal').querySelector('.modal-title').textContent = '选取特性（L2/L3/L4）';
+    var body = document.getElementById('featureSelectBody');
+    var html = '';
+    if (!allData.features || allData.features.length === 0) {
+        html = '<div class="empty-state">暂无可选特性</div>';
+    } else {
+        html += '<div style="margin-bottom:8px;font-size:12px;color:#64748b;">勾选特性行可多选L2/L3/L4级特性，点击"确认选取"完成添加</div>';
+        /* 按层级分组 */
+        var l2Features = allData.features.filter(function(f) { return f.level === 'L2'; });
+        var l3Features = allData.features.filter(function(f) { return f.level === 'L3'; });
+        var l4Features = allData.features.filter(function(f) { return f.level === 'L4'; });
+
+        if (l2Features.length > 0) {
+            html += '<div style="margin-bottom:12px;">';
+            html += '<div style="font-weight:600;color:#0891b2;font-size:13px;margin-bottom:4px;">L2级特性</div>';
+            html += '<table class="req-select-table"><tbody>';
+            l2Features.forEach(function(f) {
+                var alreadySel = currentChangeObjects.some(function(o) { return o.reqId === f.id; });
+                if (alreadySel) return;
+                html += '<tr style="cursor:pointer;" onclick="toggleFeatureCheckbox(this)">';
+                html += '<td style="width:40px;text-align:center;"><input type="checkbox" class="feature-select-cb" data-id="' + escapeHtml(f.id) + '" onclick="event.stopPropagation()"></td>';
+                html += '<td style="width:130px;color:#0891b2;font-weight:600;">' + escapeHtml(f.code) + '</td>';
+                html += '<td>' + escapeHtml(f.name) + '</td>';
+                html += '<td style="width:100px;">' + escapeHtml(f.category || '') + '</td>';
+                html += '<td style="width:80px;">' + escapeHtml(f.owner || '') + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+        }
+        if (l3Features.length > 0) {
+            html += '<div style="margin-bottom:12px;">';
+            html += '<div style="font-weight:600;color:#7c3aed;font-size:13px;margin-bottom:4px;">L3级特性</div>';
+            html += '<table class="req-select-table"><tbody>';
+            l3Features.forEach(function(f) {
+                var alreadySel = currentChangeObjects.some(function(o) { return o.reqId === f.id; });
+                if (alreadySel) return;
+                html += '<tr style="cursor:pointer;" onclick="toggleFeatureCheckbox(this)">';
+                html += '<td style="width:40px;text-align:center;"><input type="checkbox" class="feature-select-cb" data-id="' + escapeHtml(f.id) + '" onclick="event.stopPropagation()"></td>';
+                html += '<td style="width:130px;color:#7c3aed;font-weight:600;">' + escapeHtml(f.code) + '</td>';
+                html += '<td>' + escapeHtml(f.name) + '</td>';
+                html += '<td style="width:100px;">' + escapeHtml(f.category || '') + '</td>';
+                html += '<td style="width:80px;">' + escapeHtml(f.owner || '') + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+        }
+        if (l4Features.length > 0) {
+            html += '<div style="margin-bottom:12px;">';
+            html += '<div style="font-weight:600;color:#ea580c;font-size:13px;margin-bottom:4px;">L4级特性</div>';
+            html += '<table class="req-select-table"><tbody>';
+            l4Features.forEach(function(f) {
+                var alreadySel = currentChangeObjects.some(function(o) { return o.reqId === f.id; });
+                if (alreadySel) return;
+                html += '<tr style="cursor:pointer;" onclick="toggleFeatureCheckbox(this)">';
+                html += '<td style="width:40px;text-align:center;"><input type="checkbox" class="feature-select-cb" data-id="' + escapeHtml(f.id) + '" onclick="event.stopPropagation()"></td>';
+                html += '<td style="width:130px;color:#ea580c;font-weight:600;">' + escapeHtml(f.code) + '</td>';
+                html += '<td>' + escapeHtml(f.name) + '</td>';
+                html += '<td style="width:100px;">' + escapeHtml(f.category || '') + '</td>';
+                html += '<td style="width:80px;">' + escapeHtml(f.owner || '') + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+        }
+        if (html.indexOf('feature-select-cb') < 0) {
+            html = '<div class="empty-state">所有特性已被选取</div>';
+        }
+    }
+    body.innerHTML = html;
     document.getElementById('featureSelectModal').classList.add('show');
+}
+
+function toggleFeatureCheckbox(row) {
+    var cb = row.querySelector('.feature-select-cb');
+    if (cb) cb.checked = !cb.checked;
+}
+
+function confirmFeatureSelectBatch() {
+    var checkboxes = document.querySelectorAll('#featureSelectBody .feature-select-cb:checked');
+    var added = 0;
+    checkboxes.forEach(function(cb) {
+        var featId = cb.getAttribute('data-id');
+        var feat = allData.features.find(function(f) { return f.id === featId; });
+        if (feat) {
+            currentChangeObjects.push({
+                reqType: '特性', reqId: feat.id, reqCode: feat.code, reqTitle: feat.name,
+                changeCategory: '修改', changes: [],
+                tempData: { name: feat.name, code: feat.code, parentName: feat.parentName || '',
+                             category: feat.category || '', evolutionStrategy: feat.evolutionStrategy || '',
+                             owner: feat.owner || '', status: feat.status || '', desc: feat.desc || '',
+                             tags: feat.tags || '', level: feat.level }
+            });
+            added++;
+        }
+    });
+    closeModal('featureSelectModal');
+    if (added > 0) {
+        renderChangeCreateForm();
+        refreshAggFields();
+    }
 }
 
 /* ========== 变更管理：需求选择 ========== */
@@ -2801,29 +3025,16 @@ function confirmReqSelectBatch() {
 }
 
 /* ========== 变更管理：新增变更对象 ========== */
-function addNewChangeObject(type, parentIndex) {
-    var obj = {
-        reqType: type,
-        reqId: type + '-NEW-' + Date.now(),
-        reqCode: type + '-2026-NEW-' + (currentChangeObjects.length + 1),
-        reqTitle: '(' + (type === 'IR' ? '新增IR' : type === 'SR' ? '新增SR' : '新增特性') + ')',
-        changeCategory: '新增',
-        changes: []
-    };
-    if (type === 'SR' && parentIndex !== undefined) {
-        // 新增SR关联到IR
-        currentChangeObjects.splice(parentIndex + 1, 0, obj);
-    } else {
-        currentChangeObjects.push(obj);
-    }
-    renderChangeCreateForm();
-}
-
-/* ========== 变更管理：新增IR（直接弹出编辑弹窗） ========== */
+/* 新增IR/SR/特性的模式标记 */
 var isAddingNewIR = false;
+var isAddingNewSR = false;
+var isAddingNewFeature = false;
+var newFeatureLevel = '';
 
 function addNewIR() {
     isAddingNewIR = true;
+    isAddingNewSR = false;
+    isAddingNewFeature = false;
     currentEditChangeObjIndex = null;
     currentEditOrigData = {};
 
@@ -2866,59 +3077,38 @@ function addNewIR() {
     document.getElementById('changeEditReqModal').classList.add('show');
 }
 
-/* ========== 变更管理：对象操作 ========== */
-function removeChangeObject(index) {
-    currentChangeObjects.splice(index, 1);
-    renderChangeCreateForm();
-}
+function addNewSR() {
+    isAddingNewIR = false;
+    isAddingNewSR = true;
+    isAddingNewFeature = false;
+    currentEditChangeObjIndex = null;
+    currentEditOrigData = {};
 
-/* ========== 变更管理：编辑需求基本信息 ========== */
-var currentEditChangeObjIndex = null;
-var currentEditOrigData = null;
+    document.getElementById('changeEditReqTitle').textContent = '新增SR需求基本信息';
 
-function editChangeObject(index) {
-    var obj = currentChangeObjects[index];
-    if (!obj) return;
-    currentEditChangeObjIndex = index;
-
-    /* 查找需求数据 */
-    var reqData;
-    if (obj.reqType === 'IR') {
-        reqData = allData.ir.find(function(i) { return i.id === obj.reqId; });
-    } else {
-        reqData = allData.sr.find(function(s) { return s.id === obj.reqId; });
-    }
-    /* 新增的需求（尚未保存到allData），使用空白模板 */
-    if (!reqData) {
-        /* 新增的需求：优先使用tempData中保存的编辑数据 */
-        if (obj.tempData) {
-            reqData = obj.tempData;
-        } else {
-            reqData = { code: obj.reqCode, title: obj.reqTitle };
-        }
-    }
-
-    /* 存储原始数据深拷贝，用于后续比对 */
-    currentEditOrigData = JSON.parse(JSON.stringify(reqData));
-
-    /* 弹窗标题 */
-    var typeLabel = obj.reqType === 'IR' ? 'IR' : obj.reqType === 'SR' ? 'SR' : '特性';
-    document.getElementById('changeEditReqTitle').textContent =
-        typeLabel + '需求基本信息编辑（' + (reqData.code || obj.reqCode || '') + '）';
-
-    /* 根据需求类型选择字段集 */
-    var fieldsConfig = obj.reqType === 'IR' ? irEditableFields : srEditableFields;
-
+    var fieldsConfig = srEditableFields;
     var body = document.getElementById('changeEditReqBody');
     var html = '';
+
+    /* 父级IR选择器 */
+    html += '<div class="detail-section">';
+    html += '<div class="detail-section-title">父级IR</div>';
+    html += '<div class="detail-grid">';
+    html += '<div class="detail-field"><label class="detail-field-label">绑定父级IR</label>';
+    html += '<select data-field="父级IR" class="detail-input" style="width:100%;">';
+    html += '<option value="">请选择父级IR</option>';
+    allData.ir.forEach(function(ir) {
+        html += '<option value="' + escapeHtml(ir.id) + '">' + escapeHtml(ir.code) + ' - ' + escapeHtml(ir.title) + '</option>';
+    });
+    html += '</select></div>';
+    html += '</div></div>';
 
     /* 基本信息 */
     html += '<div class="detail-section">';
     html += '<div class="detail-section-title">基本信息</div>';
     html += '<div class="detail-grid">';
     fieldsConfig['基本信息'].forEach(function(label) {
-        var prop = fieldLabelToProp[label];
-        var val = reqData[prop];
+        var val = '';
         if (dropdownOptions[label]) {
             html += selectField(label, val, dropdownOptions[label], false, true);
         } else if (multiSelectOptions[label]) {
@@ -2938,11 +3128,253 @@ function editChangeObject(index) {
     html += '<div class="detail-section-title">计划排期</div>';
     html += '<div class="detail-grid three-col">';
     fieldsConfig['计划排期'].forEach(function(label) {
-        var prop = fieldLabelToProp[label];
-        var val = reqData[prop];
-        html += dateField(label, val, false, true);
+        html += dateField(label, '', false, true);
     });
     html += '</div></div>';
+
+    body.innerHTML = html;
+    document.getElementById('changeEditReqModal').classList.add('show');
+}
+
+function addNewFeatureL3() {
+    isAddingNewIR = false;
+    isAddingNewSR = false;
+    isAddingNewFeature = true;
+    newFeatureLevel = 'L3';
+    currentEditChangeObjIndex = null;
+    currentEditOrigData = {};
+
+    document.getElementById('changeEditReqTitle').textContent = '新增L3级特性基本信息';
+
+    var body = document.getElementById('changeEditReqBody');
+    var html = '';
+
+    /* 父级特性选择器（L2级） */
+    html += '<div class="detail-section">';
+    html += '<div class="detail-section-title">父级特性（L2级）</div>';
+    html += '<div class="detail-grid">';
+    html += '<div class="detail-field"><label class="detail-field-label">绑定父级L2特性</label>';
+    html += '<select data-field="父级特性" class="detail-input" style="width:100%;">';
+    html += '<option value="">请选择L2级特性</option>';
+    var l2Features = (allData.features || []).filter(function(f) { return f.level === 'L2'; });
+    l2Features.forEach(function(f) {
+        html += '<option value="' + escapeHtml(f.id) + '">' + escapeHtml(f.code) + ' - ' + escapeHtml(f.name) + '</option>';
+    });
+    html += '</select></div>';
+    html += '</div></div>';
+
+    /* 基本信息 */
+    html += '<div class="detail-section">';
+    html += '<div class="detail-section-title">基本信息</div>';
+    html += '<div class="detail-grid">';
+    featureEditableFields['基本信息'].forEach(function(label) {
+        var val = '';
+        if (featureDropdownOptions[label]) {
+            html += selectField(label, val, featureDropdownOptions[label], false, true);
+        } else if (label === '描述') {
+            html += textareaField(label, val, true, true);
+        } else if (label === '特性编码') {
+            /* 编码自动生成，只读 */
+            html += '<div class="detail-field"><label class="detail-field-label">' + label + '</label><input type="text" class="detail-input" data-field="' + label + '" value="FT-L3-NEW-' + (currentChangeObjects.length + 1) + '" readonly style="background:#f1f5f9;"></div>';
+        } else if (label === '父级特性') {
+            /* 已在上方选择器处理，跳过 */
+        } else {
+            html += field(label, val, false, true);
+        }
+    });
+    html += '</div></div>';
+
+    body.innerHTML = html;
+    document.getElementById('changeEditReqModal').classList.add('show');
+}
+
+function addNewFeatureL4() {
+    isAddingNewIR = false;
+    isAddingNewSR = false;
+    isAddingNewFeature = true;
+    newFeatureLevel = 'L4';
+    currentEditChangeObjIndex = null;
+    currentEditOrigData = {};
+
+    document.getElementById('changeEditReqTitle').textContent = '新增L4级特性基本信息';
+
+    var body = document.getElementById('changeEditReqBody');
+    var html = '';
+
+    /* 父级特性选择器（L3级，含新增的L3） */
+    html += '<div class="detail-section">';
+    html += '<div class="detail-section-title">父级特性（L3级）</div>';
+    html += '<div class="detail-grid">';
+    html += '<div class="detail-field"><label class="detail-field-label">绑定父级L3特性</label>';
+    html += '<select data-field="父级特性" class="detail-input" style="width:100%;">';
+    html += '<option value="">请选择L3级特性</option>';
+    /* 已有的L3特性 */
+    (allData.features || []).filter(function(f) { return f.level === 'L3'; }).forEach(function(f) {
+        html += '<option value="' + escapeHtml(f.id) + '">' + escapeHtml(f.code) + ' - ' + escapeHtml(f.name) + '</option>';
+    });
+    /* 当前变更对象中新增的L3特性 */
+    currentChangeObjects.forEach(function(o) {
+        if (o.reqType === '特性' && o.changeCategory === '新增' && o.tempData && o.tempData.level === 'L3') {
+            html += '<option value="' + escapeHtml(o.reqId) + '">' + escapeHtml(o.reqCode) + ' - ' + escapeHtml(o.reqTitle) + '（新增）</option>';
+        }
+    });
+    html += '</select></div>';
+    html += '</div></div>';
+
+    /* 基本信息 */
+    html += '<div class="detail-section">';
+    html += '<div class="detail-section-title">基本信息</div>';
+    html += '<div class="detail-grid">';
+    featureEditableFields['基本信息'].forEach(function(label) {
+        var val = '';
+        if (featureDropdownOptions[label]) {
+            html += selectField(label, val, featureDropdownOptions[label], false, true);
+        } else if (label === '描述') {
+            html += textareaField(label, val, true, true);
+        } else if (label === '特性编码') {
+            html += '<div class="detail-field"><label class="detail-field-label">' + label + '</label><input type="text" class="detail-input" data-field="' + label + '" value="FT-L4-NEW-' + (currentChangeObjects.length + 1) + '" readonly style="background:#f1f5f9;"></div>';
+        } else if (label === '父级特性') {
+            /* 已在上方选择器处理，跳过 */
+        } else {
+            html += field(label, val, false, true);
+        }
+    });
+    html += '</div></div>';
+
+    body.innerHTML = html;
+    document.getElementById('changeEditReqModal').classList.add('show');
+}
+
+/* ========== 变更管理：对象操作 ========== */
+function removeChangeObject(index) {
+    currentChangeObjects.splice(index, 1);
+    renderChangeCreateForm();
+}
+
+/* ========== 变更管理：编辑需求基本信息 ========== */
+var currentEditChangeObjIndex = null;
+var currentEditOrigData = null;
+
+function editChangeObject(index) {
+    var obj = currentChangeObjects[index];
+    if (!obj) return;
+    isAddingNewIR = false;
+    isAddingNewSR = false;
+    isAddingNewFeature = false;
+    currentEditChangeObjIndex = index;
+
+    /* 查找需求数据 */
+    var reqData;
+    if (obj.reqType === 'IR') {
+        reqData = allData.ir.find(function(i) { return i.id === obj.reqId; });
+    } else if (obj.reqType === 'SR') {
+        reqData = allData.sr.find(function(s) { return s.id === obj.reqId; });
+    } else if (obj.reqType === '特性') {
+        reqData = allData.features.find(function(f) { return f.id === obj.reqId; });
+    }
+    /* 新增的需求（尚未保存到allData），使用空白模板 */
+    if (!reqData) {
+        if (obj.tempData) {
+            reqData = obj.tempData;
+        } else {
+            reqData = { code: obj.reqCode, title: obj.reqTitle, name: obj.reqTitle };
+        }
+    }
+
+    /* 存储原始数据深拷贝，用于后续比对 */
+    currentEditOrigData = JSON.parse(JSON.stringify(reqData));
+
+    /* 弹窗标题 */
+    var typeLabel = obj.reqType === 'IR' ? 'IR' : obj.reqType === 'SR' ? 'SR' : '特性';
+    document.getElementById('changeEditReqTitle').textContent =
+        typeLabel + '需求基本信息编辑（' + (reqData.code || obj.reqCode || '') + '）';
+
+    var body = document.getElementById('changeEditReqBody');
+    var html = '';
+
+    if (obj.reqType === '特性') {
+        /* 特性编辑：使用featureEditableFields */
+        var featData = reqData;
+
+        /* 父级特性（只读展示） */
+        if (obj.changeCategory !== '新增') {
+            html += '<div class="detail-section">';
+            html += '<div class="detail-section-title">父级特性</div>';
+            html += '<div class="detail-grid">';
+            html += '<div class="detail-field"><label class="detail-field-label">父级特性</label>';
+            html += '<input type="text" class="detail-input" value="' + escapeHtml(featData.parentName || '') + '" readonly style="background:#f1f5f9;">';
+            html += '</div></div></div>';
+        }
+
+        /* 基本信息 */
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">基本信息</div>';
+        html += '<div class="detail-grid">';
+        featureEditableFields['基本信息'].forEach(function(label) {
+            var prop = featureLabelToProp[label];
+            var val = featData[prop];
+            if (featureDropdownOptions[label]) {
+                html += selectField(label, val, featureDropdownOptions[label], false, true);
+            } else if (label === '描述') {
+                html += textareaField(label, val, true, true);
+            } else if (label === '特性编码') {
+                html += '<div class="detail-field"><label class="detail-field-label">' + label + '</label><input type="text" class="detail-input" data-field="' + label + '" value="' + escapeHtml(val || '') + '" readonly style="background:#f1f5f9;"></div>';
+            } else if (label === '父级特性') {
+                /* 父级特性已单独展示，基本信息中跳过 */
+            } else {
+                html += field(label, val, false, true);
+            }
+        });
+        html += '</div></div>';
+    } else {
+        /* IR/SR编辑 */
+        var fieldsConfig = obj.reqType === 'IR' ? irEditableFields : srEditableFields;
+
+        /* 父级IR（SR时展示） */
+        if (obj.reqType === 'SR' && obj.changeCategory !== '新增') {
+            var parentIR = allData.ir.find(function(ir) { return ir.id === obj.reqId || ir.id === (reqData.parentId || ''); });
+            if (parentIR) {
+                html += '<div class="detail-section">';
+                html += '<div class="detail-section-title">父级IR</div>';
+                html += '<div class="detail-grid">';
+                html += '<div class="detail-field"><label class="detail-field-label">父级IR</label>';
+                html += '<input type="text" class="detail-input" value="' + escapeHtml(parentIR.code + ' - ' + parentIR.title) + '" readonly style="background:#f1f5f9;">';
+                html += '</div></div></div>';
+            }
+        }
+
+        /* 基本信息 */
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">基本信息</div>';
+        html += '<div class="detail-grid">';
+        fieldsConfig['基本信息'].forEach(function(label) {
+            var prop = fieldLabelToProp[label];
+            var val = reqData[prop];
+            if (dropdownOptions[label]) {
+                html += selectField(label, val, dropdownOptions[label], false, true);
+            } else if (multiSelectOptions[label]) {
+                html += multiSelectField(label, val, multiSelectOptions[label], false, true);
+            } else if (label === '适配品类') {
+                html += categoryField(label, val, true);
+            } else if (label === '描述') {
+                html += textareaField(label, val, true, true);
+            } else {
+                html += field(label, val, false, true);
+            }
+        });
+        html += '</div></div>';
+
+        /* 计划排期 */
+        html += '<div class="detail-section">';
+        html += '<div class="detail-section-title">计划排期</div>';
+        html += '<div class="detail-grid three-col">';
+        fieldsConfig['计划排期'].forEach(function(label) {
+            var prop = fieldLabelToProp[label];
+            var val = reqData[prop];
+            html += dateField(label, val, false, true);
+        });
+        html += '</div></div>';
+    }
 
     body.innerHTML = html;
     document.getElementById('changeEditReqModal').classList.add('show');
@@ -2951,7 +3383,7 @@ function editChangeObject(index) {
 /* 收集编辑弹窗中所有表单字段值，存为tempData */
 function collectFormData(fieldsConfig) {
     var data = {};
-    var allFields = fieldsConfig['基本信息'].concat(fieldsConfig['计划排期']);
+    var allFields = fieldsConfig['基本信息'].concat(fieldsConfig['计划排期'] || []);
     allFields.forEach(function(label) {
         var prop = fieldLabelToProp[label];
         if (multiSelectOptions[label] || label === '适配品类') {
@@ -2965,32 +3397,125 @@ function collectFormData(fieldsConfig) {
     return data;
 }
 
-function saveChangeObjEdit() {
-    if (currentEditChangeObjIndex === null && !isAddingNewIR) return;
+/* 收集特性编辑弹窗中所有表单字段值 */
+function collectFeatureFormData() {
+    var data = {};
+    featureEditableFields['基本信息'].forEach(function(label) {
+        var prop = featureLabelToProp[label];
+        var inputEl = document.querySelector('#changeEditReqBody [data-field="' + label + '"]');
+        if (inputEl) {
+            data[prop] = inputEl.value;
+        } else {
+            /* 父级特性可能不在基本信息区 */
+            var parentEl = document.querySelector('#changeEditReqBody [data-field="父级特性"]');
+            if (label === '父级特性' && parentEl) {
+                data[prop] = parentEl.value;
+            } else {
+                data[prop] = '';
+            }
+        }
+    });
+    /* 获取父级特性的文本（用于显示） */
+    var parentSelect = document.querySelector('#changeEditReqBody [data-field="父级特性"]');
+    if (parentSelect && parentSelect.selectedIndex >= 0) {
+        data.parentName = parentSelect.options[parentSelect.selectedIndex].text.split(' - ').slice(-1)[0].replace('（新增）', '').trim();
+        data.parentCode = parentSelect.value;
+    }
+    return data;
+}
 
-    /* 新增IR模式：收集全部字段数据，存入tempData */
+function saveChangeObjEdit() {
+    if (currentEditChangeObjIndex === null && !isAddingNewIR && !isAddingNewSR && !isAddingNewFeature) return;
+
+    /* ========== 新增IR模式 ========== */
     if (isAddingNewIR) {
         var titleInput = document.querySelector('#changeEditReqBody [data-field="标题"]');
         var title = titleInput ? titleInput.value.trim() : '';
         if (!title) { alert('请输入标题'); return; }
 
         var formData = collectFormData(irEditableFields);
-        formData.code = 'IR-2026-NEW-' + (currentChangeObjects.length + 1);
+        var newIRCode = 'IR-2026-NEW-' + (currentChangeObjects.length + 1);
+        formData.code = newIRCode;
         formData.title = title;
 
-        var obj = {
-            reqType: 'IR',
-            reqId: 'IR-NEW-' + Date.now(),
-            reqCode: 'IR-2026-NEW-' + (currentChangeObjects.length + 1),
-            reqTitle: title,
-            changeCategory: '新增',
-            changes: [],
-            tempData: formData
-        };
-        currentChangeObjects.push(obj);
+        currentChangeObjects.push({
+            reqType: 'IR', reqId: 'IR-NEW-' + Date.now(), reqCode: newIRCode, reqTitle: title,
+            changeCategory: '新增', changes: [], tempData: formData
+        });
 
         closeModal('changeEditReqModal');
         isAddingNewIR = false;
+        currentEditChangeObjIndex = null;
+        currentEditOrigData = null;
+        renderChangeCreateForm();
+        refreshAggFields();
+        return;
+    }
+
+    /* ========== 新增SR模式 ========== */
+    if (isAddingNewSR) {
+        /* 校验：必须选择父级IR */
+        var parentIRSelect = document.querySelector('#changeEditReqBody [data-field="父级IR"]');
+        var parentIRId = parentIRSelect ? parentIRSelect.value : '';
+        if (!parentIRId) { alert('请选择父级IR'); return; }
+        var parentIR = allData.ir.find(function(ir) { return ir.id === parentIRId; });
+        if (!parentIR) { alert('父级IR不存在'); return; }
+
+        var srTitleInput = document.querySelector('#changeEditReqBody [data-field="标题"]');
+        var srTitle = srTitleInput ? srTitleInput.value.trim() : '';
+        if (!srTitle) { alert('请输入标题'); return; }
+
+        var srFormData = collectFormData(srEditableFields);
+        var newSRCode = 'SR-2026-NEW-' + (currentChangeObjects.length + 1);
+        srFormData.code = newSRCode;
+        srFormData.title = srTitle;
+        srFormData.parentId = parentIRId;
+
+        currentChangeObjects.push({
+            reqType: 'SR', reqId: 'SR-NEW-' + Date.now(), reqCode: newSRCode, reqTitle: srTitle,
+            changeCategory: '新增', changes: [], tempData: srFormData,
+            parentIRCode: parentIR.code, parentIRId: parentIRId
+        });
+
+        closeModal('changeEditReqModal');
+        isAddingNewSR = false;
+        currentEditChangeObjIndex = null;
+        currentEditOrigData = null;
+        renderChangeCreateForm();
+        refreshAggFields();
+        return;
+    }
+
+    /* ========== 新增特性模式（L3/L4） ========== */
+    if (isAddingNewFeature) {
+        /* 校验：必须选择父级特性 */
+        var parentFeatSelect = document.querySelector('#changeEditReqBody [data-field="父级特性"]');
+        var parentFeatId = parentFeatSelect ? parentFeatSelect.value : '';
+        if (!parentFeatId) {
+            alert(newFeatureLevel === 'L3' ? '请选择父级L2特性' : '请选择父级L3特性');
+            return;
+        }
+
+        var featNameInput = document.querySelector('#changeEditReqBody [data-field="特性名称"]');
+        var featName = featNameInput ? featNameInput.value.trim() : '';
+        if (!featName) { alert('请输入特性名称'); return; }
+
+        var featFormData = collectFeatureFormData();
+        var newFeatCode = newFeatureLevel === 'L3' ?
+            'FT-L3-NEW-' + (currentChangeObjects.length + 1) :
+            'FT-L4-NEW-' + (currentChangeObjects.length + 1);
+        featFormData.code = newFeatCode;
+        featFormData.name = featName;
+        featFormData.level = newFeatureLevel;
+
+        currentChangeObjects.push({
+            reqType: '特性', reqId: 'FT-NEW-' + Date.now(), reqCode: newFeatCode, reqTitle: featName,
+            changeCategory: '新增', changes: [], tempData: featFormData
+        });
+
+        closeModal('changeEditReqModal');
+        isAddingNewFeature = false;
+        newFeatureLevel = '';
         currentEditChangeObjIndex = null;
         currentEditOrigData = null;
         renderChangeCreateForm();
@@ -3004,15 +3529,25 @@ function saveChangeObjEdit() {
 
     /* 变更分类为"新增"的对象：收集全部字段数据，存入tempData */
     if (obj.changeCategory === '新增') {
-        var fieldsConfig = obj.reqType === 'IR' ? irEditableFields : srEditableFields;
-        var formData = collectFormData(fieldsConfig);
-        var newTitleInput = document.querySelector('#changeEditReqBody [data-field="标题"]');
-        if (newTitleInput && newTitleInput.value.trim()) {
-            obj.reqTitle = newTitleInput.value.trim();
-            formData.title = obj.reqTitle;
+        if (obj.reqType === '特性') {
+            var featNameInput2 = document.querySelector('#changeEditReqBody [data-field="特性名称"]');
+            if (featNameInput2 && featNameInput2.value.trim()) {
+                obj.reqTitle = featNameInput2.value.trim();
+            }
+            obj.tempData = collectFeatureFormData();
+            obj.tempData.code = obj.reqCode;
+            obj.tempData.level = obj.tempData.level || 'L3';
+        } else {
+            var fieldsConfig = obj.reqType === 'IR' ? irEditableFields : srEditableFields;
+            var formData = collectFormData(fieldsConfig);
+            var newTitleInput = document.querySelector('#changeEditReqBody [data-field="标题"]');
+            if (newTitleInput && newTitleInput.value.trim()) {
+                obj.reqTitle = newTitleInput.value.trim();
+                formData.title = obj.reqTitle;
+            }
+            formData.code = obj.reqCode;
+            obj.tempData = formData;
         }
-        formData.code = obj.reqCode;
-        obj.tempData = formData;
         closeModal('changeEditReqModal');
         currentEditChangeObjIndex = null;
         currentEditOrigData = null;
@@ -3032,46 +3567,44 @@ function saveChangeObjEdit() {
         return;
     }
 
-    var origData = currentEditOrigData;
-    var fieldsConfig = obj.reqType === 'IR' ? irEditableFields : srEditableFields;
-    var allFields = fieldsConfig['基本信息'].concat(fieldsConfig['计划排期']);
-    var newChanges = [];
-
-    allFields.forEach(function(label) {
-        var prop = fieldLabelToProp[label];
-        var origVal = origData[prop];
-
-        if (multiSelectOptions[label] || label === '适配品类') {
-            /* 多选/分类：收集勾选的checkbox */
-            var checkboxes = document.querySelectorAll('#changeEditReqBody [data-field="' + label + '"]:checked');
-            var newVal = Array.prototype.map.call(checkboxes, function(cb) { return cb.value; });
-            /* 规范化原始值为数组 */
-            var origArr = [];
-            if (Array.isArray(origVal)) {
-                origArr = origVal.slice();
-            } else if (origVal) {
-                origArr = String(origVal).split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s; });
-            }
-            /* 比较数组 */
-            var changed = false;
-            if (newVal.length !== origArr.length) {
-                changed = true;
-            } else {
-                for (var i = 0; i < newVal.length; i++) {
-                    if (origArr.indexOf(newVal[i]) < 0) { changed = true; break; }
-                }
-            }
-            if (changed) {
+    /* 变更分类为"迁移"的对象：只比对"归属项目"字段 */
+    if (obj.changeCategory === '迁移') {
+        var origData = currentEditOrigData;
+        var newChanges = [];
+        var inputEl = document.querySelector('#changeEditReqBody [data-field="归属项目"]');
+        if (inputEl) {
+            var newVal = inputEl.value;
+            var origStr = origData.project || '';
+            if (newVal !== origStr) {
                 newChanges.push({
-                    field: label,
-                    before: origArr.join(', ') || '（空）',
-                    after: newVal.join(', ') || '（空）'
+                    field: '归属项目',
+                    before: origStr || '（空）',
+                    after: newVal || '（空）'
                 });
             }
-        } else {
-            /* 单值字段：text, select, date, textarea */
+        }
+        obj.changes = newChanges;
+        closeModal('changeEditReqModal');
+        currentEditChangeObjIndex = null;
+        currentEditOrigData = null;
+        renderChangeCreateForm();
+        refreshAggFields();
+        return;
+    }
+
+    /* ========== 变更分类为"修改"的对象：逐字段比对 ========== */
+    var origData = currentEditOrigData;
+    var newChanges = [];
+
+    if (obj.reqType === '特性') {
+        /* 特性字段比对 */
+        featureEditableFields['基本信息'].forEach(function(label) {
+            if (label === '特性编码' || label === '父级特性') return;
+            var prop = featureLabelToProp[label];
+            var origVal = origData[prop];
             var inputEl = document.querySelector('#changeEditReqBody [data-field="' + label + '"]');
-            var newVal = inputEl ? inputEl.value : '';
+            if (!inputEl) return;
+            var newVal = inputEl.value;
             var origStr = (origVal === null || origVal === undefined) ? '' : String(origVal);
             if (newVal !== origStr) {
                 newChanges.push({
@@ -3080,17 +3613,68 @@ function saveChangeObjEdit() {
                     after: newVal || '（空）'
                 });
             }
+        });
+        /* 特性名称同步更新 */
+        var featNameInput3 = document.querySelector('#changeEditReqBody [data-field="特性名称"]');
+        if (featNameInput3 && featNameInput3.value) {
+            obj.reqTitle = featNameInput3.value;
         }
-    });
+    } else {
+        /* IR/SR字段比对 */
+        var fieldsConfig = obj.reqType === 'IR' ? irEditableFields : srEditableFields;
+        var allFields = fieldsConfig['基本信息'].concat(fieldsConfig['计划排期']);
+
+        allFields.forEach(function(label) {
+            var prop = fieldLabelToProp[label];
+            var origVal = origData[prop];
+
+            if (multiSelectOptions[label] || label === '适配品类') {
+                var checkboxes = document.querySelectorAll('#changeEditReqBody [data-field="' + label + '"]:checked');
+                var newVal = Array.prototype.map.call(checkboxes, function(cb) { return cb.value; });
+                var origArr = [];
+                if (Array.isArray(origVal)) {
+                    origArr = origVal.slice();
+                } else if (origVal) {
+                    origArr = String(origVal).split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s; });
+                }
+                var changed = false;
+                if (newVal.length !== origArr.length) {
+                    changed = true;
+                } else {
+                    for (var i = 0; i < newVal.length; i++) {
+                        if (origArr.indexOf(newVal[i]) < 0) { changed = true; break; }
+                    }
+                }
+                if (changed) {
+                    newChanges.push({
+                        field: label,
+                        before: origArr.join(', ') || '（空）',
+                        after: newVal.join(', ') || '（空）'
+                    });
+                }
+            } else {
+                var inputEl = document.querySelector('#changeEditReqBody [data-field="' + label + '"]');
+                var newVal = inputEl ? inputEl.value : '';
+                var origStr = (origVal === null || origVal === undefined) ? '' : String(origVal);
+                if (newVal !== origStr) {
+                    newChanges.push({
+                        field: label,
+                        before: origStr || '（空）',
+                        after: newVal || '（空）'
+                    });
+                }
+            }
+        });
+
+        /* IR/SR标题同步更新 */
+        var titleInput2 = document.querySelector('#changeEditReqBody [data-field="标题"]');
+        if (titleInput2 && titleInput2.value) {
+            obj.reqTitle = titleInput2.value;
+        }
+    }
 
     /* 更新变更对象的变更明细 */
     obj.changes = newChanges;
-
-    /* 同步更新标题 */
-    var titleInput = document.querySelector('#changeEditReqBody [data-field="标题"]');
-    if (titleInput && titleInput.value) {
-        obj.reqTitle = titleInput.value;
-    }
 
     /* 关闭弹窗 */
     closeModal('changeEditReqModal');
@@ -3101,11 +3685,7 @@ function saveChangeObjEdit() {
 
     /* 重新渲染表单 */
     renderChangeCreateForm();
-
-    /* 反馈提示 */
-    if (newChanges.length > 0) {
-        /* 在控制台记录，不弹窗打断流程 */
-    }
+    refreshAggFields();
 }
 
 function updateChangeObj(index, prop, value) {
@@ -3145,7 +3725,7 @@ function submitChange() {
     if (!title) { alert('请输入变更标题'); return; }
     if (currentChangeObjects.length === 0) { alert('请至少添加一个变更对象'); return; }
     var affectFeature = document.getElementById('changeAffectFeature').value;
-    var isValuePoint = document.getElementById('changeIsValuePoint').value;
+    var isValuePoint = autoAggIsValuePoint();
     var changeOwner = document.getElementById('changeOwner').value.trim();
     var sourceDept = document.getElementById('changeSourceDept').value.trim();
     var changeReason = document.getElementById('changeReason').value.trim();
@@ -3153,7 +3733,6 @@ function submitChange() {
     var reviewLink = document.getElementById('changeReviewLink').value.trim();
 
     if (!affectFeature) { alert('请选择是否影响特性'); return; }
-    if (!isValuePoint) { alert('请选择是否价值点'); return; }
     if (!changeOwner) { alert('请输入变更责任人'); return; }
     if (!sourceDept) { alert('请输入变更来源部门'); return; }
     if (!changeReason) { alert('请输入变更原因'); return; }
@@ -3183,9 +3762,12 @@ function submitChange() {
         if (cobj.changeCategory === '删除' && cobj.changes.length > 0) {
             alert('变更对象【' + (cobj.reqTitle || '') + '】的变更分类为"删除"，不能有变更字段信息，否则不允许提交'); return;
         }
-        /* 规则3: 变更分类为"NA"的对象不能有变更字段信息 */
-        if (cobj.changeCategory === 'NA' && cobj.changes.length > 0) {
-            alert('变更对象【' + (cobj.reqTitle || '') + '】的变更分类为"NA"，不能有变更字段信息，否则不允许提交'); return;
+        /* 规则3: 变更分类为"迁移"的对象必须有"归属项目"的修改记录 */
+        if (cobj.changeCategory === '迁移') {
+            var hasProjectMigration = cobj.changes.some(function(ch) { return ch.field === '归属项目'; });
+            if (!hasProjectMigration) {
+                alert('变更对象【' + (cobj.reqTitle || '') + '】的变更分类为"迁移"，变更字段必须有"归属项目"的修改记录'); return;
+            }
         }
     }
 
@@ -3194,16 +3776,6 @@ function submitChange() {
         var hasFeatureObj = currentChangeObjects.some(function(o) { return o.reqType === '特性'; });
         if (!hasFeatureObj) {
             alert('是否影响特性选择了"是"，请在变更对象中选择或新增特性对象'); return;
-        }
-    }
-
-    // 校验：变更标题含有"迁移"时，变更字段必须有"归属项目"的修改记录
-    if (title.indexOf('迁移') >= 0) {
-        var hasProjectChange = currentChangeObjects.some(function(obj) {
-            return obj.changes.some(function(ch) { return ch.field === '归属项目'; });
-        });
-        if (!hasProjectChange) {
-            alert('变更标题含有"迁移"字样，变更字段中必须有"归属项目"的修改记录'); return;
         }
     }
 
@@ -3217,19 +3789,16 @@ function submitChange() {
     });
     if (categories.length === 0) categories = ['手机'];
 
-    var reqLevel = autoAggReqLevel();
+    var changeObject = autoAggChangeObject();
     var changeType = autoAggChangeType();
     var changeCategory = autoAggChangeCategory();
 
-    /* 校验：需求层级、变更类型不能为空，变更分类不能为NA */
-    if (reqLevel === '-' || reqLevel === '') {
-        alert('需求层级为空，不允许提交变更'); return;
+    /* 校验：变更对象、变更类型不能为空 */
+    if (changeObject === '-' || changeObject === '') {
+        alert('变更对象为空，不允许提交变更'); return;
     }
     if (changeType === '-' || changeType === '') {
         alert('变更类型为空，不允许提交变更'); return;
-    }
-    if (changeCategory === 'NA' || changeCategory === '') {
-        alert('变更分类为NA，不允许提交变更'); return;
     }
 
     var today = new Date().toISOString().slice(0, 10);
@@ -3240,7 +3809,8 @@ function submitChange() {
         if (existingChange) {
             existingChange.title = title;
             existingChange.objects = JSON.parse(JSON.stringify(currentChangeObjects));
-            existingChange.reqLevel = reqLevel;
+            existingChange.changeObject = changeObject;
+            existingChange.reqLevel = changeObject; /* 兼容旧字段 */
             existingChange.changeType = changeType;
             existingChange.changeCategory = changeCategory;
             existingChange.affectFeature = affectFeature;
@@ -3257,7 +3827,7 @@ function submitChange() {
             existingChange.endDate = null;
             existingChange.applyDate = today;
             /* 重置审批流程 */
-            existingChange.workflow = determineWorkflow(reqLevel, changeType, categories);
+            existingChange.workflow = determineWorkflow(changeObject, changeType, categories);
         }
         currentResubmitChangeId = null;
         closeModal('changeCreateModal');
@@ -3272,7 +3842,8 @@ function submitChange() {
     var change = {
         id: newId, code: newId, title: title, status: '流程中',
         objects: JSON.parse(JSON.stringify(currentChangeObjects)),
-        reqLevel: reqLevel, changeType: changeType, changeCategory: changeCategory,
+        changeObject: changeObject, reqLevel: changeObject, /* 兼容旧字段 */
+        changeType: changeType, changeCategory: changeCategory,
         affectFeature: affectFeature, isValuePoint: isValuePoint,
         changeOwner: changeOwner, sourceDept: sourceDept.split(',').map(function(s) { return s.trim(); }),
         irFactors: document.getElementById('changeIrFactors').value,
@@ -3280,7 +3851,7 @@ function submitChange() {
         changeReason: changeReason, reviewConclusion: reviewConclusion,
         reviewLink: reviewLink, remark: document.getElementById('changeRemark').value.trim(),
         applicant: changeOwner, applyDate: today, endDate: null,
-        workflow: determineWorkflow(reqLevel, changeType, categories)
+        workflow: determineWorkflow(changeObject, changeType, categories)
     };
 
     allData.changes.push(change);
@@ -3291,43 +3862,59 @@ function submitChange() {
 }
 
 /* ========== 变更管理：电子流路由 ========== */
-function determineWorkflow(reqLevel, changeType, categories) {
+function determineWorkflow(changeObject, changeType, categories) {
     var category = categories[0] || '手机';
     var approvers = approverConfig[category] || approverConfig['手机'];
     var roles = [];
 
-    var hasIR = reqLevel.indexOf('初始需求IR') >= 0;
-    var hasSR = reqLevel.indexOf('系统需求SR') >= 0;
+    var hasIR = changeObject.indexOf('初始需求IR') >= 0;
+    var hasSR = changeObject.indexOf('系统需求SR') >= 0;
+    var hasFeature = changeObject.indexOf('特性') >= 0;
     var hasDemand = changeType.indexOf('需求变更') >= 0;
     var hasPlan = changeType.indexOf('计划变更') >= 0;
+    var hasFeatureChange = changeType.indexOf('特性变更') >= 0;
 
-    // 根据需求层级和变更类型确定审批角色
+    // 根据变更对象和变更类型确定审批角色
     if (hasIR && hasSR) {
         // IR + SR
         if (hasDemand && hasPlan) {
-            roles = ['SPP', 'SE', 'SPM']; // SPP+SE+SPM
+            roles = ['SPP', 'SE', 'SPM'];
         } else if (hasDemand) {
-            roles = ['SPP', 'SE']; // SPP+SE
+            roles = ['SPP', 'SE'];
         } else { // hasPlan
-            roles = ['SPM']; // SPM
+            roles = ['SPM'];
         }
     } else if (hasIR) {
         // IR only
         if (hasDemand && hasPlan) {
-            roles = ['SPP', 'SPM']; // SPP&SPM
+            roles = ['SPP', 'SPM'];
         } else if (hasDemand) {
-            roles = ['SPP']; // SPP
+            roles = ['SPP'];
         } else { // hasPlan
-            roles = ['SPM']; // SPM
+            roles = ['SPM'];
         }
     } else if (hasSR) {
         // SR only
         if (hasDemand && hasPlan) {
-            roles = ['SE', 'SPM']; // SE&SPM
+            roles = ['SE', 'SPM'];
         } else if (hasDemand) {
-            roles = ['SE']; // SE
+            roles = ['SE'];
         } else { // hasPlan
-            roles = ['SPM']; // SPM
+            roles = ['SPM'];
+        }
+    } else if (hasFeature) {
+        // 特性 only
+        roles = ['SE'];
+    }
+
+    // 如果有特性变更，确保SE在审批链中
+    if (hasFeatureChange && roles.indexOf('SE') < 0) {
+        // 在SPM之前插入SE
+        var spmIdx = roles.indexOf('SPM');
+        if (spmIdx >= 0) {
+            roles.splice(spmIdx, 0, 'SE');
+        } else {
+            roles.push('SE');
         }
     }
 
@@ -3348,14 +3935,17 @@ function generateTestCases(change) {
     var cases = [];
     var tcId = 1;
 
-    var hasIR = change.reqLevel.indexOf('初始需求IR') >= 0;
-    var hasSR = change.reqLevel.indexOf('系统需求SR') >= 0;
+    var changeObj = change.changeObject || change.reqLevel || '';
+    var hasIR = changeObj.indexOf('初始需求IR') >= 0;
+    var hasSR = changeObj.indexOf('系统需求SR') >= 0;
+    var hasFeature = changeObj.indexOf('特性') >= 0;
     var hasDemand = change.changeType.indexOf('需求变更') >= 0;
     var hasPlan = change.changeType.indexOf('计划变更') >= 0;
+    var hasFeatureChange = change.changeType.indexOf('特性变更') >= 0;
 
     /* 1. 流程路由测试 */
     var flowDesc = change.workflow.steps.map(function(s) { return s.role + '(' + s.approver + ')'; }).join(' → ');
-    var scenarioDesc = change.reqLevel + ' / ' + change.changeType;
+    var scenarioDesc = changeObj + ' / ' + change.changeType;
 
     cases.push({
         id: 'TC-' + String(tcId++).padStart(3, '0'),
@@ -3366,14 +3956,14 @@ function generateTestCases(change) {
         expected: '审批路径为：' + flowDesc + '\n共' + change.workflow.steps.length + '个审批节点'
     });
 
-    /* 2. 场景路由验证（不同需求层级+变更类型组合） */
+    /* 2. 场景路由验证（不同变更对象+变更类型组合） */
     if (hasIR && hasSR) {
         if (hasDemand && hasPlan) {
             cases.push({
                 id: 'TC-' + String(tcId++).padStart(3, '0'),
                 category: '场景路由',
                 title: 'IR+SR / 需求变更+计划变更 → SPP+SE+SPM',
-                precondition: '需求层级：IR+SR\n变更类型：需求变更+计划变更',
+                precondition: '变更对象：IR+SR\n变更类型：需求变更+计划变更',
                 steps: '1.提交包含IR和SR的变更\n2.验证需求基本信息和计划排期均有变更\n3.验证审批流程包含SPP、SE、SPM三个节点',
                 expected: '路由到SPP → SE → SPM三级审批'
             });
@@ -3382,7 +3972,7 @@ function generateTestCases(change) {
                 id: 'TC-' + String(tcId++).padStart(3, '0'),
                 category: '场景路由',
                 title: 'IR+SR / 需求变更 → SPP+SE',
-                precondition: '需求层级：IR+SR\n变更类型：需求变更',
+                precondition: '变更对象：IR+SR\n变更类型：需求变更',
                 steps: '1.提交包含IR和SR的变更\n2.验证仅需求基本信息有变更\n3.验证审批流程包含SPP、SE两个节点',
                 expected: '路由到SPP → SE两级审批'
             });
@@ -3391,7 +3981,7 @@ function generateTestCases(change) {
                 id: 'TC-' + String(tcId++).padStart(3, '0'),
                 category: '场景路由',
                 title: 'IR+SR / 计划变更 → SPM',
-                precondition: '需求层级：IR+SR\n变更类型：计划变更',
+                precondition: '变更对象：IR+SR\n变更类型：计划变更',
                 steps: '1.提交包含IR和SR的变更\n2.验证仅计划排期有变更\n3.验证审批流程仅包含SPM节点',
                 expected: '路由到SPM单级审批'
             });
@@ -3402,7 +3992,7 @@ function generateTestCases(change) {
                 id: 'TC-' + String(tcId++).padStart(3, '0'),
                 category: '场景路由',
                 title: 'IR / 需求变更+计划变更 → SPP+SPM',
-                precondition: '需求层级：IR\n变更类型：需求变更+计划变更',
+                precondition: '变更对象：IR\n变更类型：需求变更+计划变更',
                 steps: '1.提交仅含IR的变更\n2.验证审批流程包含SPP、SPM两个节点',
                 expected: '路由到SPP → SPM两级审批'
             });
@@ -3411,7 +4001,7 @@ function generateTestCases(change) {
                 id: 'TC-' + String(tcId++).padStart(3, '0'),
                 category: '场景路由',
                 title: 'IR / 需求变更 → SPP',
-                precondition: '需求层级：IR\n变更类型：需求变更',
+                precondition: '变更对象：IR\n变更类型：需求变更',
                 steps: '1.提交仅含IR的需求变更\n2.验证审批流程仅包含SPP节点',
                 expected: '路由到SPP单级审批'
             });
@@ -3420,7 +4010,7 @@ function generateTestCases(change) {
                 id: 'TC-' + String(tcId++).padStart(3, '0'),
                 category: '场景路由',
                 title: 'IR / 计划变更 → SPM',
-                precondition: '需求层级：IR\n变更类型：计划变更',
+                precondition: '变更对象：IR\n变更类型：计划变更',
                 steps: '1.提交仅含IR的计划变更\n2.验证审批流程仅包含SPM节点',
                 expected: '路由到SPM单级审批'
             });
@@ -3431,7 +4021,7 @@ function generateTestCases(change) {
                 id: 'TC-' + String(tcId++).padStart(3, '0'),
                 category: '场景路由',
                 title: 'SR / 需求变更+计划变更 → SE+SPM',
-                precondition: '需求层级：SR\n变更类型：需求变更+计划变更',
+                precondition: '变更对象：SR\n变更类型：需求变更+计划变更',
                 steps: '1.提交仅含SR的变更\n2.验证审批流程包含SE、SPM两个节点',
                 expected: '路由到SE → SPM两级审批'
             });
@@ -3440,7 +4030,7 @@ function generateTestCases(change) {
                 id: 'TC-' + String(tcId++).padStart(3, '0'),
                 category: '场景路由',
                 title: 'SR / 需求变更 → SE',
-                precondition: '需求层级：SR\n变更类型：需求变更',
+                precondition: '变更对象：SR\n变更类型：需求变更',
                 steps: '1.提交仅含SR的需求变更\n2.验证审批流程仅包含SE节点',
                 expected: '路由到SE单级审批'
             });
@@ -3449,7 +4039,7 @@ function generateTestCases(change) {
                 id: 'TC-' + String(tcId++).padStart(3, '0'),
                 category: '场景路由',
                 title: 'SR / 计划变更 → SPM',
-                precondition: '需求层级：SR\n变更类型：计划变更',
+                precondition: '变更对象：SR\n变更类型：计划变更',
                 steps: '1.提交仅含SR的计划变更\n2.验证审批流程仅包含SPM节点',
                 expected: '路由到SPM单级审批'
             });
@@ -3564,7 +4154,7 @@ function renderChangeApprovalBody(change, isDetail) {
     html += '<div class="change-detail-grid">';
     html += '<div class="change-detail-item"><div class="change-detail-item-label">变更标题</div><div class="change-detail-item-value">' + escapeHtml(change.title) + '</div></div>';
     html += '<div class="change-detail-item"><div class="change-detail-item-label">流程编码</div><div class="change-detail-item-value">' + escapeHtml(change.code) + '</div></div>';
-    html += '<div class="change-detail-item"><div class="change-detail-item-label">需求层级</div><div class="change-detail-item-value">' + escapeHtml(change.reqLevel) + '</div></div>';
+    html += '<div class="change-detail-item"><div class="change-detail-item-label">变更对象</div><div class="change-detail-item-value">' + escapeHtml(change.changeObject || change.reqLevel) + '</div></div>';
     html += '<div class="change-detail-item"><div class="change-detail-item-label">变更类型</div><div class="change-detail-item-value">' + escapeHtml(change.changeType) + '</div></div>';
     html += '<div class="change-detail-item"><div class="change-detail-item-label">变更分类</div><div class="change-detail-item-value">' + escapeHtml(change.changeCategory) + '</div></div>';
     html += '<div class="change-detail-item"><div class="change-detail-item-label">变更状态</div><div class="change-detail-item-value">' + getChangeStatusBadge(change.status) + '</div></div>';
@@ -3720,7 +4310,6 @@ function resubmitChange() {
     renderChangeCreateForm();
     document.getElementById('changeTitle').value = change.title;
     document.getElementById('changeAffectFeature').value = change.affectFeature || '';
-    document.getElementById('changeIsValuePoint').value = change.isValuePoint || '';
     document.getElementById('changeOwner').value = change.changeOwner || '';
     document.getElementById('changeSourceDept').value = (change.sourceDept || []).join(',');
     document.getElementById('changeReason').value = change.changeReason || '';
