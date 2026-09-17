@@ -2056,21 +2056,12 @@ var mockOAData = {
     '刘洋': { empId: 'EMP005', dept1: '安全合规部', dept2: '安全架构部' }
 };
 
-/* 通过变更提出人姓名或工号自动获取部门信息（模拟OA接口） */
+/* 通过变更提出人姓名自动获取部门信息（模拟OA接口，内部通过工号映射） */
 function autoFillDept() {
     var name = document.getElementById('changeOwner').value.trim();
-    var empId = document.getElementById('changeOwnerEmpId').value.trim();
     var dept = '';
-    var person = null;
-    if (empId) {
-        for (var n in mockOAData) {
-            if (mockOAData[n].empId === empId) { person = mockOAData[n]; break; }
-        }
-    }
-    if (!person && name && mockOAData[name]) {
-        person = mockOAData[name];
-    }
-    if (person) {
+    if (name && mockOAData[name]) {
+        var person = mockOAData[name];
         dept = person.dept2 ? person.dept1 + '/' + person.dept2 : person.dept1;
     }
     document.getElementById('changeSourceDept').value = dept;
@@ -2108,7 +2099,7 @@ function generateChangeSampleData() {
             ],
             changeObject: '初始需求IR', reqLevel: '初始需求IR', changeType: '需求变更', changeCategory: '修改',
             affectFeature: '否', isValuePoint: '否',
-            changeOwner: '张明', changeOwnerEmpId: 'EMP001', sourceDept: ['产品部'],
+            changeOwner: '张明', sourceDept: ['产品部'],
             irFactors: '市场需求调整', srFactors: '',
             changeReason: '根据市场反馈，S级优先级过高，调整为A级', reviewConclusion: '评审通过，同意变更',
             reviewLink: 'https://example.com/review/001', remark: '',
@@ -2133,7 +2124,7 @@ function generateChangeSampleData() {
             ],
             changeObject: '初始需求IR,系统需求SR', reqLevel: '初始需求IR,系统需求SR', changeType: '计划变更', changeCategory: '修改',
             affectFeature: '否', isValuePoint: '否',
-            changeOwner: '李华', changeOwnerEmpId: 'EMP002', sourceDept: ['研发部', '产品部'],
+            changeOwner: '李华', sourceDept: ['研发部', '产品部'],
             irFactors: '', srFactors: '排期调整',
             changeReason: '供应商芯片交付延迟，开发排期需后移两周', reviewConclusion: '',
             reviewLink: '', remark: '已通知相关干系人',
@@ -2154,7 +2145,7 @@ function generateChangeSampleData() {
             ],
             changeObject: '系统需求SR', reqLevel: '系统需求SR', changeType: '需求变更,计划变更', changeCategory: '新增',
             affectFeature: '是', isValuePoint: '是',
-            changeOwner: '王芳', changeOwnerEmpId: 'EMP003', sourceDept: ['影像部'],
+            changeOwner: '王芳', sourceDept: ['影像部'],
             irFactors: '', srFactors: '新增SR需求',
             changeReason: '需要新增多摄协同拍摄的SR需求以支持IR-2026-007', reviewConclusion: '',
             reviewLink: '', remark: '',
@@ -2185,7 +2176,7 @@ function generateDemoChanges() {
             ],
             changeObject:'初始需求IR', reqLevel:'初始需求IR', changeType:'需求变更', changeCategory:'修改',
             affectFeature:'否', isValuePoint:'否',
-            changeOwner:'张明', changeOwnerEmpId:'EMP001', sourceDept:['产品部'],
+            changeOwner:'张明', sourceDept:['产品部'],
             irFactors:'市场需求调整', srFactors:'',
             changeReason:'AI夜景算法需迁移至新平台架构，归属项目从tOS17.0变更为tOS17.1',
             reviewConclusion:'评审通过', reviewLink:'https://example.com/review/demo1', remark:'',
@@ -2208,7 +2199,7 @@ function generateDemoChanges() {
             ],
             changeObject:'初始需求IR', reqLevel:'初始需求IR', changeType:'计划变更', changeCategory:'修改',
             affectFeature:'否', isValuePoint:'否',
-            changeOwner:'李华', changeOwnerEmpId:'EMP002', sourceDept:['研发部','产品部'],
+            changeOwner:'李华', sourceDept:['研发部','产品部'],
             irFactors:'排期调整', srFactors:'',
             changeReason:'开发资源紧张，IR排期需后移两周',
             reviewConclusion:'', reviewLink:'', remark:'',
@@ -2228,7 +2219,7 @@ function generateDemoChanges() {
             ],
             changeObject:'初始需求IR', reqLevel:'初始需求IR', changeType:'需求变更,计划变更', changeCategory:'修改',
             affectFeature:'否', isValuePoint:'否',
-            changeOwner:'张明', changeOwnerEmpId:'EMP001', sourceDept:['产品部','研发部'],
+            changeOwner:'张明', sourceDept:['产品部','研发部'],
             irFactors:'市场需求调整,排期调整', srFactors:'',
             changeReason:'AI夜景算法需求等级从S调整为A，同时开发排期后移20天',
             reviewConclusion:'评审通过', reviewLink:'https://example.com/review/demo3', remark:'',
@@ -2248,7 +2239,7 @@ function generateDemoChanges() {
             ],
             changeObject:'系统需求SR', reqLevel:'系统需求SR', changeType:'需求变更,计划变更', changeCategory:'新增',
             affectFeature:'是', isValuePoint:'是',
-            changeOwner:'王芳', changeOwnerEmpId:'EMP003', sourceDept:['影像部'],
+            changeOwner:'王芳', sourceDept:['影像部'],
             irFactors:'', srFactors:'新增SR需求',
             changeReason:'需要新增多摄协同拍摄的SR需求以支持IR-2026-007',
             reviewConclusion:'', reviewLink:'', remark:'',
@@ -2270,7 +2261,7 @@ function generateDemoChanges() {
             ],
             changeObject:'系统需求SR', reqLevel:'系统需求SR', changeType:'计划变更', changeCategory:'修改',
             affectFeature:'否', isValuePoint:'否',
-            changeOwner:'李华', changeOwnerEmpId:'EMP002', sourceDept:['研发部'],
+            changeOwner:'李华', sourceDept:['研发部'],
             irFactors:'', srFactors:'排期调整',
             changeReason:'供应商芯片交付延迟，SR开发排期需后移',
             reviewConclusion:'评审通过', reviewLink:'https://example.com/review/demo5', remark:'',
@@ -2290,7 +2281,7 @@ function generateDemoChanges() {
             ],
             changeObject:'系统需求SR', reqLevel:'系统需求SR', changeType:'需求变更,计划变更', changeCategory:'修改',
             affectFeature:'否', isValuePoint:'否',
-            changeOwner:'陈明', changeOwnerEmpId:'EMP004', sourceDept:['研发部'],
+            changeOwner:'陈明', sourceDept:['研发部'],
             irFactors:'', srFactors:'市场需求调整,排期调整',
             changeReason:'蓝牙音频SR需求等级从B提升至A，排期同步后移',
             reviewConclusion:'评审通过', reviewLink:'https://example.com/review/demo6', remark:'',
@@ -2317,7 +2308,7 @@ function generateDemoChanges() {
             ],
             changeObject:'初始需求IR,系统需求SR', reqLevel:'初始需求IR,系统需求SR', changeType:'需求变更', changeCategory:'修改',
             affectFeature:'是', isValuePoint:'否',
-            changeOwner:'刘洋', changeOwnerEmpId:'EMP005', sourceDept:['安全部','研发部'],
+            changeOwner:'刘洋', sourceDept:['安全部','研发部'],
             irFactors:'合规要求', srFactors:'合规要求',
             changeReason:'根据最新法规要求，隐私安全模块需求等级提升至S级，IR和SR同步变更',
             reviewConclusion:'评审通过', reviewLink:'https://example.com/review/demo7', remark:'涉及合规要求',
@@ -2345,7 +2336,7 @@ function generateDemoChanges() {
             ],
             changeObject:'初始需求IR,系统需求SR', reqLevel:'初始需求IR,系统需求SR', changeType:'计划变更', changeCategory:'修改',
             affectFeature:'否', isValuePoint:'否',
-            changeOwner:'陈明', changeOwnerEmpId:'EMP004', sourceDept:['研发部'],
+            changeOwner:'陈明', sourceDept:['研发部'],
             irFactors:'排期调整', srFactors:'排期调整',
             changeReason:'系统流畅度优化涉及IR和SR两个层级，排期需同步后移',
             reviewConclusion:'', reviewLink:'', remark:'',
@@ -2371,7 +2362,7 @@ function generateDemoChanges() {
             ],
             changeObject:'初始需求IR,系统需求SR', reqLevel:'初始需求IR,系统需求SR', changeType:'需求变更,计划变更', changeCategory:'修改',
             affectFeature:'是', isValuePoint:'是',
-            changeOwner:'王芳', changeOwnerEmpId:'EMP003', sourceDept:['影像部','研发部'],
+            changeOwner:'王芳', sourceDept:['影像部','研发部'],
             irFactors:'市场需求调整', srFactors:'排期调整',
             changeReason:'显示驱动模块需迁移至新平台，IR归属项目变更，SR计划排期同步调整',
             reviewConclusion:'', reviewLink:'', remark:'涉及多模块协同',
@@ -2540,7 +2531,7 @@ function renderChangeCreateForm() {
 
     /* 保存已有表单值，防止重新渲染时丢失 */
     var fv = {};
-    ['changeTitle','changeAffectFeature','changeOwner','changeOwnerEmpId',
+    ['changeTitle','changeAffectFeature','changeOwner',
      'changeSourceDept','changeReason','changeReviewConclusion',
      'changeReviewLink','changeRemark','changeIrFactors','changeSrFactors'
     ].forEach(function(id) {
@@ -2712,9 +2703,6 @@ function renderChangeCreateForm() {
     // 变更提出人
     html += '<div class="change-info-field"><div class="change-info-label">变更提出人 <span class="required">*</span></div>';
     html += '<div class="change-info-value"><input type="text" id="changeOwner" placeholder="请输入姓名" value="' + escapeHtml(fv.changeOwner || '') + '" onblur="autoFillDept()"></div></div>';
-    // 变更提出人工号
-    html += '<div class="change-info-field"><div class="change-info-label">工号</div>';
-    html += '<div class="change-info-value"><input type="text" id="changeOwnerEmpId" placeholder="请输入工号" value="' + escapeHtml(fv.changeOwnerEmpId || '') + '" onblur="autoFillDept()"></div></div>';
     // 变更提出人部门
     html += '<div class="change-info-field"><div class="change-info-label">变更提出人部门 <span class="required">*</span></div>';
     html += '<div class="change-info-value"><input type="text" id="changeSourceDept" placeholder="自动读取" readonly value="' + escapeHtml(fv.changeSourceDept || '') + '"></div></div>';
@@ -3771,7 +3759,6 @@ function submitChange() {
     var affectFeature = document.getElementById('changeAffectFeature').value;
     var isValuePoint = autoAggIsValuePoint();
     var changeOwner = document.getElementById('changeOwner').value.trim();
-    var changeOwnerEmpId = document.getElementById('changeOwnerEmpId').value.trim();
     var sourceDept = document.getElementById('changeSourceDept').value.trim();
     var changeReason = document.getElementById('changeReason').value.trim();
     var reviewConclusion = document.getElementById('changeReviewConclusion').value.trim();
@@ -3779,7 +3766,7 @@ function submitChange() {
 
     if (!affectFeature) { alert('请选择是否影响特性'); return; }
     if (!changeOwner) { alert('请输入变更提出人'); return; }
-    if (!sourceDept) { alert('变更提出人部门不能为空，请输入正确的变更提出人姓名或工号'); return; }
+    if (!sourceDept) { alert('变更提出人部门不能为空，请输入正确的变更提出人姓名'); return; }
     if (!changeReason) { alert('请输入变更原因'); return; }
     if (!reviewConclusion) { alert('请输入领域评审意见'); return; }
     if (!reviewLink) { alert('请输入需求变更申请表链接'); return; }
@@ -3890,7 +3877,7 @@ function submitChange() {
         changeObject: changeObject, reqLevel: changeObject, /* 兼容旧字段 */
         changeType: changeType, changeCategory: changeCategory,
         affectFeature: affectFeature, isValuePoint: isValuePoint,
-        changeOwner: changeOwner, changeOwnerEmpId: changeOwnerEmpId,
+        changeOwner: changeOwner,
         sourceDept: sourceDept ? [sourceDept] : [],
         irFactors: document.getElementById('changeIrFactors').value,
         srFactors: document.getElementById('changeSrFactors').value,
@@ -4357,7 +4344,6 @@ function resubmitChange() {
     document.getElementById('changeTitle').value = change.title;
     document.getElementById('changeAffectFeature').value = change.affectFeature || '';
     document.getElementById('changeOwner').value = change.changeOwner || '';
-    document.getElementById('changeOwnerEmpId').value = change.changeOwnerEmpId || '';
     document.getElementById('changeSourceDept').value = (change.sourceDept || []).join(',');
     document.getElementById('changeReason').value = change.changeReason || '';
     document.getElementById('changeReviewConclusion').value = change.reviewConclusion || '';
